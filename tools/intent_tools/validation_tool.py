@@ -1,6 +1,12 @@
 from typing import Dict
+import requests
 
-VALID_SPECIALIZATIONS = ["dentist", "cardiologist", "dermatologist"]
+def get_specializations():
+    response = requests.get("http://localhost:8000/specializations")
+    return response.json().get("data", [])
+
+VALID_SPECIALIZATIONS = get_specializations()
+
 
 def validate_input(data: Dict) -> Dict:
     errors = []
