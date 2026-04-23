@@ -1,0 +1,6 @@
+{'time': '2026-04-23T12:40:07.042697', 'agent': 'parsing_tool', 'step': 'llm_call_start_with_this_input', 'data': 'Book dentist tomorrow'}
+{'time': '2026-04-23T12:40:18.998879', 'agent': 'parsing_tool', 'step': 'llm_raw_output', 'data': '{\n    "specialization": "dentist",\n    "date": "tomorrow",\n    "time_preference": null\n}'}
+{'time': '2026-04-23T12:41:50.989303', 'agent': 'parsing_tool', 'step': 'llm_call_start_with_this_input', 'data': 'Book dentist tomorrow'}
+{'time': '2026-04-23T12:41:53.858802', 'agent': 'parsing_tool', 'step': 'llm_raw_output', 'data': '{\n  "specialization": "dentist",\n  "date": "tomorrow",\n  "time_preference": null\n}'}
+{'time': '2026-04-23T12:44:38.761064', 'agent': 'parsing_tool', 'step': 'llm_call_start_with_this_input', 'data': 'Book dentist tomorrow'}
+{'time': '2026-04-23T12:44:43.351287', 'agent': 'parsing_tool', 'step': 'llm_raw_output', 'data': '{"specialization": null, "date": "tomorrow", "time_preference": null}'}
