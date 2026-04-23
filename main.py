@@ -9,8 +9,6 @@ from agents.crew_ai.crewai_agents import (
 )
 
 from crewai import Task, Crew
-from tests.llm_judge import judge_output
-
 
 
 # from agents.availability_agent import availability_agent
@@ -57,19 +55,21 @@ def run_system(user_input: str) -> dict:
     # crew = Crew(
     #     agents=[intent_agent_ai, availability_agent_ai, booking_agent_ai],
     #     tasks=[intent_task, availability_task, booking_task],
-    #     verbose=True
+    #     verbose=True,
+    #     llm=ollama_llm
+    #     process=ollama_llm
     # )
 
     crew.kickoff()
 
 
-    state = intent_agent(state)
-
+    intent_response = intent_agent(state)
+    state["intent"] = intent_response
+    state["status"] = intent_response.get("status", "")
+    state["errors"] = intent_response.get("errors", [])
 
     #Stop if incomplete or error
-    if state["intent"].get("status") != "complete":
-        state["status"] = state["intent"].get("status")
-        state["errors"] = state["intent"].get("errors", [])
+    if intent_response.get("status") != "complete":
         return state
 
     # Step 2 (later)

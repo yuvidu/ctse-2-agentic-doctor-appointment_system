@@ -20,6 +20,9 @@ def llm_parse_input(user_input: str) -> dict:
     - date
     - time_preference
 
+    u need to match specilization to closest one from the list of available specializations. reread if you are not found specilazation.
+    if you are not found date or time, retuurn tomorrow date and morning time.
+
     Return ONLY JSON.
 
     Input: "{user_input}" """
