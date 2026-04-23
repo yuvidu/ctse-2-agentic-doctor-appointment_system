@@ -1,0 +1,2 @@
+{'time': '2026-04-22T22:09:43.933148', 'agent': 'parsing_tool', 'step': 'llm_call_start_with_this_input', 'data': 'can u book a Rheumatology tommorow after 12pm'}
+{'time': '2026-04-22T22:09:53.811546', 'agent': 'parsing_tool', 'step': 'llm_raw_output', 'data': '{"specialization": "Rheumatology", "date": "tommorow", "time_preference": "after 12pm"}'}
