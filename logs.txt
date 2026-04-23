@@ -4,3 +4,7 @@
 {'time': '2026-04-23T13:14:47.297532', 'agent': 'parsing_tool', 'step': 'llm_raw_output', 'data': '```json\n{\n  "specialization": "Dentist",\n  "date": "tomorrow",\n  "time_preference": "morning"\n}\n```'}
 {'time': '2026-04-23T13:17:10.385754', 'agent': 'parsing_tool', 'step': 'llm_call_start_with_this_input', 'data': 'need to appoint a dentist '}
 {'time': '2026-04-23T13:17:18.857439', 'agent': 'parsing_tool', 'step': 'llm_raw_output', 'data': '```\n{\n  "specialization": "dentist",\n  "date": "2024-03-01",\n  "time_preference": "morning"\n}\n```'}
+{'time': '2026-04-23T14:41:43.122186', 'agent': 'parsing_tool', 'step': 'llm_call_start_with_this_input', 'data': 'need to appoint a doctor tommorow eveninig'}
+{'time': '2026-04-23T14:41:53.435485', 'agent': 'parsing_tool', 'step': 'llm_raw_output', 'data': '```\n{\n  "specialization": "undefined",\n  "date": "2024-01-01",\n  "time_preference": "morning"\n}\n```'}
+{'time': '2026-04-23T14:45:09.452119', 'agent': 'parsing_tool', 'step': 'llm_call_start_with_this_input', 'data': 'need to appoint a demotologist '}
+{'time': '2026-04-23T14:45:21.800650', 'agent': 'parsing_tool', 'step': 'llm_raw_output', 'data': '```\n{"date": "2024-01-01", "time_preference": "07:00 AM", "specialization": "Demotology"}\n```'}
