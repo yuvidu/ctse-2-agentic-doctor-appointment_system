@@ -7,6 +7,8 @@ from agents.crew_ai.crewai_agents import (
     booking_agent_ai,
     notification_agent_ai
 )
+from agents.notification_agent import notification_agent
+import uuid
 
 from crewai import Task, Crew
 
@@ -46,9 +48,27 @@ def run_system(user_input: str) -> dict:
         expected_output="Structured JSON"
     )
 
+    availability_task = Task(
+        description=f"Find doctors and available slots for intent: {user_input}",
+        agent=availability_agent_ai,
+        expected_output="Doctor list and available slots"
+    )
+
+    booking_task = Task(
+        description=f"Reserve best available slot for the parsed intent: {user_input}",
+        agent=booking_agent_ai,
+        expected_output="Booking confirmation"
+    )
+
+    notification_task = Task(
+        description=f"Send notification to user about booking: {user_input}",
+        agent=notification_agent_ai,
+        expected_output="Notification status"
+    )
+
     crew = Crew(
-        agents=[intent_agent_ai],
-        tasks=[intent_task],
+        agents=[intent_agent_ai, availability_agent_ai, booking_agent_ai, notification_agent_ai],
+        tasks=[intent_task, availability_task, booking_task, notification_task],
         verbose=True
     )
 
@@ -68,18 +88,41 @@ def run_system(user_input: str) -> dict:
     state["status"] = intent_response.get("status", "")
     state["errors"] = intent_response.get("errors", [])
 
-    #Stop if incomplete or error
+    # Stop if incomplete or error
     if intent_response.get("status") != "complete":
         return state
 
-    # Step 2 (later)
-    # state.update(availability_agent(state))
+    # Step 2/3: Lightweight availability and booking simulation (temporary)
+    parsed = intent_response.get("intent", {}) if isinstance(intent_response, dict) else {}
+    date = parsed.get("date", "")
+    time_pref = parsed.get("time_preference", "").lower() if isinstance(parsed.get("time_preference", ""), str) else ""
 
-    # Step 3 (later)
-    # state.update(booking_agent(state))
+    if "afternoon" in time_pref:
+        hour = "14:00:00"
+    elif "evening" in time_pref:
+        hour = "18:00:00"
+    else:
+        hour = "09:00:00"
 
-    # Step 4 (later)
-    # state.update(notification_agent(state))
+    if date:
+        time_iso = f"{date}T{hour}"
+    else:
+        time_iso = f"2026-05-03T{hour}"
+
+    appointment = {
+        "appointment_id": f"APT{uuid.uuid4().hex[:8]}",
+        "user_name": "Unknown",
+        "user_contact": "",
+        "doctor": "Assigned Doctor",
+        "specialization": parsed.get("specialization", ""),
+        "time_iso": time_iso,
+        "channel": "sms",
+    }
+
+    state["appointment"] = appointment
+
+    # Step 4: Notification agent - send confirmation
+    state = notification_agent(state)
 
 
 

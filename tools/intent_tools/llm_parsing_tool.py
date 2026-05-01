@@ -2,7 +2,7 @@ import ollama
 import json
 import re
 
-from tests.logging_tool import log_event
+from tools.notification_tools.logging_tool import log_event
 
 def extract_json(text: str) -> dict:
     match = re.search(r'\{.*\}', text, re.DOTALL)
