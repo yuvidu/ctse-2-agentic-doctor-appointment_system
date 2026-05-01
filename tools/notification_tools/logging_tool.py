@@ -18,9 +18,9 @@ def log_event(agent: str, step: str, data: Any) -> None:
         "data": str(data)
     }
 
-    # ✅ Print to console
+    # Print to console
     print(f"[LOG] {log}")
 
-    # ✅ Save to file
+    # Save to file
     with open("logs.txt", "a") as f:
         f.write(str(log) + "\n")

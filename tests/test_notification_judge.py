@@ -6,7 +6,7 @@ from agents.notification_agent import notification_agent
 import ollama
 
 def judge_notification_output(result: dict) -> str:
-    """Uses LLM-as-a-judge to evaluate the notification agent's output."""
+    """Evaluates the notification agent's output."""
     notification = result.get("notification", {})
     
     prompt = f"""
@@ -23,7 +23,7 @@ def judge_notification_output(result: dict) -> str:
         response = ollama.chat(
             model="llama3.2:3b",
             messages=[
-                {"role": "system", "content": "You are a strict LLM-as-a-Judge. Evaluate agent outputs. Return ONLY 'VALID' or 'INVALID'."},
+                {"role": "system", "content": "You are a strict evaluator. Evaluate agent outputs. Return ONLY 'VALID' or 'INVALID'."},
                 {"role": "user", "content": prompt}
             ]
         )

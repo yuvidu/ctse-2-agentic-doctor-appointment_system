@@ -32,7 +32,7 @@ def extract_json(text: str) -> dict:
 
 
 def notification_agent(state: Dict[str, Any]) -> Dict[str, Any]:
-    """Notification & Summary Agent utilizing LLM and CrewAI Agent structure.
+    """Notification & Summary Agent.
 
     Reads `state['appointment']`, validates it, uses Ollama to generate a notification message,
     stores it using `save_appointment`, dispatches it using `send_notification`,
@@ -61,7 +61,7 @@ def notification_agent(state: Dict[str, Any]) -> Dict[str, Any]:
         state["status"] = "error"
         return state
 
-    # 2. LLM Message Generation (Using crewai Agent abstraction conceptually, but using ollama directly as requested by assignment for local SLMs)
+    # 2. Generate Notification Message
     prompt_path = os.path.join(os.path.dirname(__file__), "notification_prompt.txt")
     if os.path.exists(prompt_path):
         with open(prompt_path, "r", encoding="utf-8") as f:
