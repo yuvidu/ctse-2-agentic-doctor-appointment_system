@@ -16,5 +16,23 @@
         "specialization": "Dentist",
         "time_iso": "2026-05-03T10:00:00",
         "channel": "sms"
+    },
+    {
+        "appointment_id": "A123",
+        "user_name": "Alice",
+        "user_contact": "+123456789",
+        "doctor": "Smith",
+        "specialization": "Dentist",
+        "time_iso": "2026-05-03T10:00:00",
+        "channel": "sms"
+    },
+    {
+        "appointment_id": "A123",
+        "user_name": "Alice",
+        "user_contact": "+123456789",
+        "doctor": "Smith",
+        "specialization": "Dentist",
+        "time_iso": "2026-05-03T10:00:00",
+        "channel": "sms"
     }
 ]

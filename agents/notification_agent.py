@@ -82,7 +82,10 @@ def notification_agent(state: Dict[str, Any]) -> Dict[str, Any]:
         content = response['message']['content']
         log_event("NotificationAgent", "llm_raw_output", content)
         llm_result = extract_json(content)
-        message = llm_result.get("message", "Appointment confirmed.")
+        if "notification" in llm_result:
+            message = llm_result["notification"].get("message", "Appointment confirmed.")
+        else:
+            message = llm_result.get("message", "Appointment confirmed.")
     except Exception as e:
         log_event("NotificationAgent", "llm_error", str(e))
         message = f"Appointment Confirmed: ID {validated_appointment.appointment_id} with Dr. {validated_appointment.doctor} on {validated_appointment.time_iso}"
