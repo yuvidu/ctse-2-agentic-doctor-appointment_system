@@ -8,6 +8,7 @@ from agents.availability_agent import availability_agent
 from agents.booking_agent import booking_agent
 from agents.crew_ai.crewai_agents import CREWAI_VERBOSE_FLAG, intent_agent_ai
 from agents.intent_agent import intent_agent
+from agents.notification_agent import notification_agent
 from crewai import Crew, Task
 from integration.intent_to_availability_state import global_state_from_intent_repo
 
@@ -16,7 +17,7 @@ _SCHEDULES = _REPO_ROOT / "data" / "sample_schedules.json"
 
 
 def run_system(user_input: str) -> dict:
-    """Run Intent agent, then Availability when intent is complete."""
+    """Run Intent, then Availability, then Notification (preview) when intent is complete."""
     state: dict = {
         "user_input": user_input,
         "intent": {},
@@ -71,9 +72,24 @@ def run_system(user_input: str) -> dict:
         state["appointment"] = final_state.get("appointment")
         state["status"] = final_state.get("status")
         if final_state.get("errors"):
-            # Append any new errors from the booking agent
             existing_errors = state.get("errors", [])
             new_errors = [e for e in final_state["errors"] if e not in existing_errors]
             state["errors"].extend(new_errors)
+
+    appt = state.get("appointment")
+    if isinstance(appt, dict) and appt.get("id") and not appt.get("appointment_id"):
+        state["appointment"] = {
+            "appointment_id": str(appt["id"]),
+            "user_name": str(appt.get("user_name") or "Guest"),
+            "user_contact": str(appt.get("user_contact") or "n/a"),
+            "doctor": str(appt.get("doctor_id") or appt.get("doctor") or ""),
+            "specialization": str(
+                appt.get("specialization") or appt.get("specialty") or "General Medicine"
+            ),
+            "time_iso": str(appt.get("start_time") or appt.get("time_iso") or ""),
+            "channel": str(appt.get("channel") or "sms"),
+        }
+
+    state = notification_agent(state)
 
     return state

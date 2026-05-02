@@ -1,8 +1,8 @@
 # Healthcare MAS (CTSE Assignment 2)
 
-Local multi-agent scaffold: **Intent** (Ollama + tools) → **Availability** (schedule file tool + optional Ollama ranking) → Booking / Notification (your team).
+Local multi-agent scaffold: **Intent** (Ollama + tools) → **Availability** (schedule file tool + optional Ollama ranking) → **Notification** (mock SMS/email + local JSON log) → **Booking** (not wired yet).
 
-Repository layout: this folder is the **project root** (Python backend, `frontend/`, `data/`, `tests/`, `static/`).
+Repository layout: this folder is the **project root** (Python backend, `frontend/`, `data/`, `tests/`, `static/`). Notification work is integrated here only; see [`docs/NOTIFICATION_SINGLE_REPO.md`](docs/NOTIFICATION_SINGLE_REPO.md) if you previously used a separate `Notification/` folder.
 
 ---
 
@@ -134,6 +134,8 @@ Then open **http://127.0.0.1:8010/**
 
 **API:** `POST /api/pipeline` with JSON `{"user_input":"..."}` · `GET /api/health` · `GET /specializations`
 
+**Pipeline stages (`run_system` / `POST /api/pipeline`):** when Intent returns `status: complete`, the server runs **Availability** (schedule JSON lookup), then **Notification**. There is no Booking agent yet: Notification builds a **preview** `appointment` (`PREVIEW-…` id) from intent + first available slot, stores rows in `data/notification_appointments.json` (gitignored), and sets `notification` on the JSON response. Top-level `status` stays the **Intent** outcome (`complete` / `incomplete` / `error`) so clients can branch correctly.
+
 **Windows `WinError 10013` on port 8000:** use `--port 8010` and set `SPECIALIZATIONS_API_URL` to match. Check excluded ranges: `netsh interface ipv4 show excludedportrange protocol=tcp` (Administrator).
 
 ### React frontend (development)
@@ -245,8 +247,8 @@ Use dates that exist in `data/sample_schedules.json` for predictable availabilit
 
 | Area | Status |
 |------|--------|
-| Multi-agent orchestration | CrewAI stubs + `main.py` sequential flow; **follow-up**: single Crew sequential process or LangGraph to avoid duplicate Intent work (Crew `kickoff` + separate `intent_agent` call). |
-| Tools | Intent tools (LLM parse, validation API, etc.) + `fetch_doctor_availability` (file I/O). |
+| Multi-agent orchestration | CrewAI stubs + `pipeline.run_system`: Intent → Availability → **Notification** (preview); Booking TBD. **follow-up**: single Crew sequential process or LangGraph to avoid duplicate Intent work (Crew `kickoff` + separate `intent_agent` call). |
+| Tools | Intent tools + `fetch_doctor_availability` + **notification mock send** + **JSON storage** under `data/`. |
 | State | `state_schema.State` for orchestrator dict; `schemas.state.GlobalState` for Availability slice; `integration/intent_to_availability_state.py` bridges Intent field names. |
 | Observability | JSON logs on stderr from `utils/logging_utils.py` and Intent tools (gated by `MAS_DEBUG`). |
 | Ollama | Local only; optional `AVAILABILITY_USE_OLLAMA=1` for slot ranking. |

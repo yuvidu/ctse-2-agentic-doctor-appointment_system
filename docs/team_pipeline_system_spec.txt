@@ -1,0 +1,118 @@
+Hey guys, here’s the full breakdown of our 4-agent system including tools so we stay aligned 👇
+
+Our system is a Multi-Agent pipeline where each agent has a specific role and uses tools to interact with real-world components (DB/API/files).
+
+━━━━━━━━━━━━━━━━━━━
+
+1️⃣ Intent & Context Builder Agent (mine)
+Role: Understand user input and convert it into structured data
+
+Tasks:
+
+* Extract specialization, date, time preference (using Ollama)
+* Detect missing fields
+* Validate data using real-world tools
+* Output clean JSON for next agent
+
+Tools:
+
+* LLM Parsing Tool (Ollama) → convert text → JSON
+* Missing Field Tool → find missing values
+* Validation Tool → validate using DB/API
+* Doctor Data Tool (MongoDB/API) → get valid specializations
+* Response Builder Tool → format output
+
+Output:
+
+* status: complete / incomplete / error
+* intent: structured data
+* next_action: proceed / ask_user
+
+━━━━━━━━━━━━━━━━━━━
+
+2️⃣ Availability Agent
+Role: Find doctors and available time slots
+
+Tasks:
+
+* Get doctors by specialization
+* Check schedules for given date
+* Filter based on time preference
+* Suggest alternatives if no slots
+
+Tools:
+
+* Doctor Lookup Tool (MongoDB/API)
+* Schedule Fetch Tool
+* Time Filter Tool
+* Next Available Slot Tool
+
+Output:
+
+* doctor
+* available_slots
+
+━━━━━━━━━━━━━━━━━━━
+
+3️⃣ Booking Agent
+Role: Confirm and store appointment
+
+Tasks:
+
+* Select best slot
+* Check for conflicts
+* Save booking in database
+* Generate appointment ID
+
+Tools:
+
+* Conflict Checker Tool (DB)
+* Booking Tool (MongoDB write)
+* ID Generator Tool
+* Retry Tool (if slot unavailable)
+
+Output:
+
+* status: confirmed / failed
+* appointment_id
+* doctor + time
+
+━━━━━━━━━━━━━━━━━━━
+
+4️⃣ Notification & Summary Agent
+Role: Send final result + logging
+
+Tasks:
+
+* Format user-friendly message
+* Store appointment details
+* Simulate notification (SMS/email)
+* Log system activity
+
+Tools:
+
+* Message Formatter Tool
+* File/DB Storage Tool
+* Notification Tool (mock sender)
+* Logging Tool (for observability)
+
+Output:
+
+* confirmation message
+* notification status
+
+━━━━━━━━━━━━━━━━━━━
+
+🔄 FLOW:
+User → Intent → Availability → Booking → Notification
+
+━━━━━━━━━━━━━━━━━━━
+
+Important:
+
+* Each agent MUST use tools (not only LLM)
+* Use MongoDB / API / files for real-world interaction
+* Keep output JSON clean for next agent
+* Each member builds: 1 agent + 1 tool + test cases
+
+I’ll make sure my agent outputs clean structured JSON so others can directly use it 👍

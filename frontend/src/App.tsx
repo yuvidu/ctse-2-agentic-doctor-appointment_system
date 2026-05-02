@@ -1,3 +1,4 @@
+import { NotificationPreviewDialog } from "@/components/NotificationPreviewDialog";
 import Plan from "@/components/ui/agent-plan";
 import { SmokeBackground } from "@/components/ui/spooky-smoke-animation";
 import { VercelV0Chat } from "@/components/ui/v0-ai-chat";
@@ -9,10 +10,12 @@ import {
 } from "@/lib/syncPlanWithPipeline";
 import { postPipeline } from "@/lib/api";
 import { formatPipelineNetworkError } from "@/lib/pipelineErrors";
+import { extractNotificationPreview } from "@/lib/notificationPreview";
 import { extractSlotLines } from "@/lib/slotsFromPipeline";
+import type { NotificationPreviewPayload } from "@/lib/notificationPreview";
 import type { PipelineResponse } from "@/types/pipeline";
 import type { Task } from "@/types/planTask";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 export default function App() {
   const [planTasks, setPlanTasks] = useState<Task[]>(() => freshHealthcareTasks());
@@ -21,12 +24,26 @@ export default function App() {
   const [lastSummary, setLastSummary] = useState<string | null>(null);
   const [slotLines, setSlotLines] = useState<string[]>([]);
   const [slotsOpen, setSlotsOpen] = useState(false);
+  const [notificationOpen, setNotificationOpen] = useState(false);
+  const [notificationPreview, setNotificationPreview] =
+    useState<NotificationPreviewPayload | null>(null);
+  const [openNotificationAfterSlots, setOpenNotificationAfterSlots] = useState(false);
+
+  useEffect(() => {
+    if (!slotsOpen && openNotificationAfterSlots && notificationPreview) {
+      setNotificationOpen(true);
+      setOpenNotificationAfterSlots(false);
+    }
+  }, [slotsOpen, openNotificationAfterSlots, notificationPreview]);
 
   const onSend = useCallback(async (message: string) => {
     setError(null);
     setLastSummary(null);
     setSlotsOpen(false);
     setSlotLines([]);
+    setNotificationOpen(false);
+    setNotificationPreview(null);
+    setOpenNotificationAfterSlots(false);
     setBusy(true);
     setPlanTasks((t) => markPlanRunning(t));
     try {
@@ -51,25 +68,38 @@ export default function App() {
       }
       setPlanTasks((t) => applyPipelineResultToTasks(t, data));
 
+      const preview = extractNotificationPreview(data);
+      setNotificationPreview(preview);
+
       const lines = extractSlotLines(data);
       setSlotLines(lines);
       if (data.status === "confirmed" && data.appointment) {
+        const a = data.appointment as Record<string, unknown>;
+        const id = String(a.id ?? a.appointment_id ?? "");
+        const doc = String(a.doctor_id ?? a.doctor ?? "");
+        const when = String(a.start_time ?? a.time_iso ?? "");
         setLastSummary(
-          `Success! Appointment booked: ${data.appointment.id} with doctor ${data.appointment.doctor_id} at ${data.appointment.start_time}.`,
+          `Success! Appointment booked: ${id} with doctor ${doc} at ${when}.`,
         );
         setSlotsOpen(false);
       } else if (lines.length > 0) {
         setSlotsOpen(true);
         setLastSummary(null);
+        if (preview) setOpenNotificationAfterSlots(true);
       } else {
         setSlotsOpen(false);
-        setLastSummary(
-          data.status === "complete"
-            ? "No available slots for the requested filters."
-            : data.status === "conflict_detected"
-              ? "The selected slot is no longer available. Please try again."
-              : "Intent needs more information or validation failed.",
-        );
+        if (preview) {
+          setLastSummary(null);
+          setNotificationOpen(true);
+        } else {
+          setLastSummary(
+            data.status === "complete"
+              ? "No available slots for the requested filters."
+              : data.status === "conflict_detected"
+                ? "The selected slot is no longer available. Please try again."
+                : "Intent needs more information or validation failed.",
+          );
+        }
       }
     } catch (e) {
       setError(formatPipelineNetworkError(e));
@@ -110,6 +140,13 @@ export default function App() {
         open={slotsOpen}
         lines={slotLines}
         onClose={() => setSlotsOpen(false)}
+      />
+
+      <NotificationPreviewDialog
+        open={notificationOpen}
+        notification={notificationPreview?.notification ?? null}
+        appointment={notificationPreview?.appointment}
+        onClose={() => setNotificationOpen(false)}
       />
     </div>
   );
