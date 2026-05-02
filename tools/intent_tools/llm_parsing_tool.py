@@ -16,6 +16,8 @@ def extract_json(text: str) -> dict:
 def llm_parse_input(user_input: str) -> dict:
     prompt = f"""
     Extract the following fields from user input:
+    - user_name (extract full name if provided, else empty string)
+    - user_contact (extract phone or email if provided, else empty string)
     - specialization
     - date
     - time_preference

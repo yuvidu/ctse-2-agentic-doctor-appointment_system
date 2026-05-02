@@ -111,8 +111,8 @@ def run_system(user_input: str) -> dict:
 
     appointment = {
         "appointment_id": f"APT{uuid.uuid4().hex[:8]}",
-        "user_name": "Unknown",
-        "user_contact": "",
+        "user_name": parsed.get("user_name", "Unknown"),
+        "user_contact": parsed.get("user_contact", ""),
         "doctor": "Assigned Doctor",
         "specialization": parsed.get("specialization", ""),
         "time_iso": time_iso,
