@@ -8,3 +8,7 @@
 {'time': '2026-04-23T14:41:53.435485', 'agent': 'parsing_tool', 'step': 'llm_raw_output', 'data': '```\n{\n  "specialization": "undefined",\n  "date": "2024-01-01",\n  "time_preference": "morning"\n}\n```'}
 {'time': '2026-04-23T14:45:09.452119', 'agent': 'parsing_tool', 'step': 'llm_call_start_with_this_input', 'data': 'need to appoint a demotologist '}
 {'time': '2026-04-23T14:45:21.800650', 'agent': 'parsing_tool', 'step': 'llm_raw_output', 'data': '```\n{"date": "2024-01-01", "time_preference": "07:00 AM", "specialization": "Demotology"}\n```'}
+{'time': '2026-05-02T09:45:25.495709', 'agent': 'parsing_tool', 'step': 'llm_call_start_with_this_input', 'data': 'need to appoint a demotologist tommorow after 2pm'}
+{'time': '2026-05-02T09:45:40.326974', 'agent': 'parsing_tool', 'step': 'llm_raw_output', 'data': '```json\n{\n  "specialization": "Demotologist",\n  "date": "Tomorrow",\n  "time_preference": "After 2pm"\n}\n```'}
+{'time': '2026-05-02T09:47:47.616233', 'agent': 'parsing_tool', 'step': 'llm_call_start_with_this_input', 'data': 'need to appoint Dermatology tommorow after 2pm'}
+{'time': '2026-05-02T09:48:03.146729', 'agent': 'parsing_tool', 'step': 'llm_raw_output', 'data': '```json\n{\n  "specialization": "Dermatology",\n  "date": "tomorrow",\n  "time_preference": "after 2pm"\n}\n```'}
