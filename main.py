@@ -1,4 +1,4 @@
-"""CLI entry: Intent + Availability (same logic as ``pipeline.run_system``)."""
+"""CLI entry: full ``pipeline.run_system`` (Intent → Availability → Booking → Notification)."""
 
 from __future__ import annotations
 

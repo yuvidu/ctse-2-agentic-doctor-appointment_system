@@ -43,30 +43,21 @@ def llm_parse_input(user_input: str) -> dict:
 
     log_event("parsing_tool", "llm_call_start_with_this_input", user_input)
 
-    try:
-        response = ollama.chat(
-            model="llama3.2:3b",
-            messages=[
-                {
-                    "role": "system",
-                    "content": "You ONLY return valid JSON. No explanations."
-                },
-                {
-                    "role": "user",
-                    "content": prompt
-                }
-            ]
-        )
-        content = response["message"]["content"]
-    except Exception:
-        # Fallback mock response for testing/missing Ollama
-        if "cardiology" in user_input.lower():
-            content = '{"specialization": "cardiology", "date": "2026-05-02", "time_preference": "morning"}'
-        elif "dermatology" in user_input.lower():
-            content = '{"specialization": "dermatology", "date": "2026-05-03", "time_preference": "morning"}'
-        else:
-            content = '{}'
+    response = ollama.chat(
+        model="llama3.2:3b",
+        messages=[
+            {
+                "role": "system",
+                "content": "You ONLY return valid JSON. No explanations."
+            },
+            {
+                "role": "user",
+                "content": prompt
+            }
+        ]
+    )
 
+    content = response["message"]["content"]
     log_event("parsing_tool", "llm_raw_output", content)
 
     parsed = extract_json(content)

@@ -1,6 +1,6 @@
 import type { Task } from "@/types/planTask";
 
-/** Default CTSE Intent → Availability pipeline steps shown in the plan UI. */
+/** Default CTSE Intent → Availability → Booking → Notification steps for the plan UI. */
 export const HEALTHCARE_PIPELINE_TASKS: Task[] = [
   {
     id: "1",
@@ -94,47 +94,55 @@ export const HEALTHCARE_PIPELINE_TASKS: Task[] = [
   },
   {
     id: "4",
-    title: "Response assembly",
-    description: "Merge intent + availability into API JSON for the UI.",
-    status: "pending",
-    priority: "medium",
-    level: 0,
-    dependencies: ["3"],
-    subtasks: [
-      {
-        id: "4.1",
-        title: "Flatten slots for display",
-        description: "doctor_id | start – end | location strings.",
-        status: "pending",
-        priority: "medium",
-        tools: ["pipeline", "fastapi"],
-      },
-    ],
-  },
-  {
-    id: "5",
     title: "Booking agent",
-    description: "Transactional Integrity Lead: Securely commit the selected slot.",
+    description: "Collision check, commit to local appointments DB, retry on conflict.",
     status: "pending",
     priority: "high",
     level: 0,
     dependencies: ["3"],
     subtasks: [
       {
-        id: "5.1",
+        id: "4.1",
         title: "Atomic collision check",
-        description: "Verify slot hasn't been taken since lookup.",
+        description: "Verify doctor_id + start_time not already in appointments.json.",
         status: "pending",
         priority: "high",
-        tools: ["booking_manager", "file-system"],
+        tools: ["booking_manager"],
+      },
+      {
+        id: "4.2",
+        title: "Commit + ID",
+        description: "Append confirmed row with APP- id.",
+        status: "pending",
+        priority: "high",
+        tools: ["booking_manager"],
+      },
+    ],
+  },
+  {
+    id: "5",
+    title: "Response assembly",
+    description: "Notification preview, flatten slots for UI, FastAPI JSON.",
+    status: "pending",
+    priority: "medium",
+    level: 0,
+    dependencies: ["4"],
+    subtasks: [
+      {
+        id: "5.1",
+        title: "Flatten slots for display",
+        description: "doctor_id | start – end | location strings.",
+        status: "pending",
+        priority: "medium",
+        tools: ["pipeline", "fastapi"],
       },
       {
         id: "5.2",
-        title: "Finalize booking",
-        description: "Generate ID and append to appointments database.",
+        title: "Notification preview",
+        description: "Mock channel message + optional Ollama copy.",
         status: "pending",
-        priority: "high",
-        tools: ["booking_agent", "SecureBookingCommiter"],
+        priority: "medium",
+        tools: ["notification_agent", "ollama"],
       },
     ],
   },

@@ -5,6 +5,7 @@ import {
   CheckCircle2,
   Clock,
   HeartPulse,
+  MinusCircle,
   Stethoscope,
   User,
   XCircle,
@@ -44,7 +45,8 @@ export function NotificationPreviewDialog({
 
   const sent = notification.status === "sent";
   const failed = notification.status === "failed";
-  const channel = (notification.channel ?? "message").toString();
+  const skipped = notification.status === "skipped";
+  const channel = (notification.channel ?? (skipped ? "—" : "message")).toString();
   const appt = appointment && typeof appointment === "object" ? appointment : null;
 
   return (
@@ -74,7 +76,9 @@ export function NotificationPreviewDialog({
                   Notification preview
                 </h2>
                 <p className="mt-0.5 text-xs leading-relaxed text-zinc-500">
-                  Mock channel — same copy your agent would send after booking.
+                  {skipped
+                    ? "No SMS was sent — the appointment was not confirmed (e.g. slot already booked)."
+                    : "Mock channel — same copy your agent would send after booking."}
                 </p>
               </div>
             </div>
@@ -88,9 +92,21 @@ export function NotificationPreviewDialog({
           </div>
 
           <div className="mb-4 flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center rounded-full bg-zinc-700 px-3 py-1 text-xs font-medium capitalize text-white">
-              {channel}
+            <span
+              className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium capitalize ${
+                skipped
+                  ? "border border-zinc-300 bg-zinc-100 text-zinc-700"
+                  : "bg-zinc-700 text-white"
+              }`}
+            >
+              {skipped ? "—" : channel}
             </span>
+            {skipped ? (
+              <span className="inline-flex items-center gap-1 rounded-full border border-zinc-300 bg-zinc-100 px-2.5 py-1 text-xs font-medium text-zinc-700">
+                <MinusCircle className="h-3.5 w-3.5 text-zinc-500" aria-hidden />
+                Skipped
+              </span>
+            ) : null}
             {sent ? (
               <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">
                 <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" aria-hidden />
@@ -103,7 +119,7 @@ export function NotificationPreviewDialog({
                 Failed
               </span>
             ) : null}
-            {!sent && !failed && notification.status ? (
+            {!sent && !failed && !skipped && notification.status ? (
               <span className="rounded-full border border-zinc-200 bg-zinc-50 px-2.5 py-1 text-xs font-medium text-zinc-600">
                 {notification.status}
               </span>

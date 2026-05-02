@@ -1,10 +1,15 @@
 # Healthcare MAS (CTSE Assignment 2)
 
-Local multi-agent scaffold: **Intent** (Ollama + tools) → **Availability** (schedule file tool + optional Ollama ranking) → **Notification** (mock SMS/email + local JSON log) → **Booking** (not wired yet).
+Local multi-agent scaffold: **Intent** (Ollama + tools) → **Availability** (schedule file tool + optional Ollama ranking) → **Booking** (collision check + local `data/appointments.json`) → **Notification** (mock SMS/email + `data/notification_appointments.json`).
 
-Repository layout: this folder is the **project root** (Python backend, `frontend/`, `data/`, `tests/`, `static/`). Notification work is integrated here only; see [`docs/NOTIFICATION_SINGLE_REPO.md`](docs/NOTIFICATION_SINGLE_REPO.md) if you previously used a separate `Notification/` folder.
+Repository layout: this folder is the **project root** (Python backend, `frontend/`, `data/`, `tests/`, `static/`). Use this tree only; see [`docs/NOTIFICATION_SINGLE_REPO.md`](docs/NOTIFICATION_SINGLE_REPO.md) if you previously used separate sibling folders (`Notification/`, `booking agent/`, etc.).
 
 ---
+
+for local repo : 
+cd "c:\Users\ASUS TUF\Desktop\CTSE 2\New folder"
+$env:SPECIALIZATIONS_API_URL = "http://127.0.0.1:8010/specializations"
+uvicorn backend.main:app --reload --host 127.0.0.1 --port 8010
 
 ## Prerequisites
 
@@ -132,9 +137,9 @@ Then open **http://127.0.0.1:8010/**
 - If **`frontend/dist`** exists (`npm run build` in `frontend/`), you get the **React** UI (same-origin `/api/pipeline`).
 - Otherwise the server serves **`static/index.html`** (legacy demo).
 
-**API:** `POST /api/pipeline` with JSON `{"user_input":"..."}` · `GET /api/health` · `GET /specializations`
+**API:** `POST /api/pipeline` (`{"user_input":"..."}`) · `GET /api/health` · `GET /specializations` · `GET /api/appointments` (local `data/appointments.json`) · `DELETE /api/appointments/{id}` · `POST /api/appointments/clear` (demo reset)
 
-**Pipeline stages (`run_system` / `POST /api/pipeline`):** when Intent returns `status: complete`, the server runs **Availability** (schedule JSON lookup), then **Notification**. There is no Booking agent yet: Notification builds a **preview** `appointment` (`PREVIEW-…` id) from intent + first available slot, stores rows in `data/notification_appointments.json` (gitignored), and sets `notification` on the JSON response. Top-level `status` stays the **Intent** outcome (`complete` / `incomplete` / `error`) so clients can branch correctly.
+**Pipeline stages (`run_system` / `POST /api/pipeline`):** when Intent returns `status: complete`, the server runs **Availability**, then **Booking** (commits first free slot to `data/appointments.json`, gitignored), then **Notification** (normalizes the booking row for mock send + appends to `data/notification_appointments.json`). If Booking does not run or does not confirm, Notification may still build a **preview** `appointment` (`PREVIEW-…`) from intent + slots. Top-level `status` stays the **Intent** outcome (`complete` / `incomplete` / `error`); booking outcome is in `booking.status` (`confirmed`, `no_slots_available`, etc.).
 
 **Windows `WinError 10013` on port 8000:** use `--port 8010` and set `SPECIALIZATIONS_API_URL` to match. Check excluded ranges: `netsh interface ipv4 show excludedportrange protocol=tcp` (Administrator).
 
@@ -247,7 +252,7 @@ Use dates that exist in `data/sample_schedules.json` for predictable availabilit
 
 | Area | Status |
 |------|--------|
-| Multi-agent orchestration | CrewAI stubs + `pipeline.run_system`: Intent → Availability → **Notification** (preview); Booking TBD. **follow-up**: single Crew sequential process or LangGraph to avoid duplicate Intent work (Crew `kickoff` + separate `intent_agent` call). |
+| Multi-agent orchestration | `pipeline.run_system`: Intent → Availability → **Booking** → **Notification** (Crew `kickoff` removed; intent uses Ollama + tools only). **follow-up**: LangGraph / single Crew if you want one orchestration style only. |
 | Tools | Intent tools + `fetch_doctor_availability` + **notification mock send** + **JSON storage** under `data/`. |
 | State | `state_schema.State` for orchestrator dict; `schemas.state.GlobalState` for Availability slice; `integration/intent_to_availability_state.py` bridges Intent field names. |
 | Observability | JSON logs on stderr from `utils/logging_utils.py` and Intent tools (gated by `MAS_DEBUG`). |

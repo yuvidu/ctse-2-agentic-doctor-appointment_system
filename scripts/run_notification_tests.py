@@ -12,6 +12,7 @@ FILES = [
     "tests/test_provisional_appointment.py",
     "tests/test_notification_integration.py",
     "tests/test_notification_judge.py",
+    "tests/test_booking_agent.py",
 ]
 
 

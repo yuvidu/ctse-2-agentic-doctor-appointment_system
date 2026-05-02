@@ -42,7 +42,7 @@ export default function Plan({
       }
     : setInternalTasks;
 
-  const [expandedTasks, setExpandedTasks] = useState<string[]>(["1", "2", "3"]);
+  const [expandedTasks, setExpandedTasks] = useState<string[]>(["1", "2", "3", "4", "5"]);
   const [expandedSubtasks, setExpandedSubtasks] = useState<Record<string, boolean>>(
     {},
   );

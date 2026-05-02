@@ -1,9 +1,9 @@
-"""Booking Agent implementation for the Transactional Integrity Lead role."""
+"""Booking Agent — transactional slot commit (local JSON DB)."""
 
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 
 from tools.booking_tools.booking_manager import BookingManager
 
@@ -11,33 +11,18 @@ _REPO_ROOT = Path(__file__).resolve().parents[1]
 _DEFAULT_APPOINTMENTS_DB = _REPO_ROOT / "data" / "appointments.json"
 
 
-def _availability_ready(state: Dict[str, Any]) -> bool:
-    """True when Availability succeeded.
-
-    ``availability_agent`` sets top-level ``status`` to ``availability_ok``.
-    The pipeline may also copy that into ``availability_status`` on a merged dict.
-    Accept either so booking runs when wired to raw Availability output.
-    """
+def _availability_ready(state: dict[str, Any]) -> bool:
+    """True when Availability succeeded with usable output."""
     if state.get("availability_status") == "availability_ok":
         return True
     return state.get("status") == "availability_ok"
 
 
-def booking_agent(state: Dict[str, Any]) -> Dict[str, Any]:
-    """Transactional Integrity Lead: Handles the final booking commitment.
+def booking_agent(state: dict[str, Any]) -> dict[str, Any]:
+    """Pick first free slot, collision-check, commit to ``data/appointments.json``.
 
-    This agent receives the global state after the Availability Agent has
-    found potential slots. It selects the best slot, performs an atomic
-    collision check to prevent race conditions, and commits the booking.
-
-    If the first choice is taken (collision), it retries with the next
-    candidate slot in Availability order (e.g. Ollama-ranked list).
-
-    Args:
-        state (Dict[str, Any]): The global orchestration state.
-
-    Returns:
-        Dict[str, Any]: The updated global state with booking status and details.
+    Does **not** overwrite top-level ``state["status"]`` (Intent stays ``complete`` for the UI).
+    Writes ``state["booking"]`` with ``confirmed`` / ``no_slots_available`` / etc.
     """
     manager = BookingManager(db_path=str(_DEFAULT_APPOINTMENTS_DB))
 
@@ -48,7 +33,7 @@ def booking_agent(state: Dict[str, Any]) -> Dict[str, Any]:
     slots: list[dict[str, Any]] = list(availability.get("available_slots") or [])
 
     if not slots:
-        state["status"] = "no_slots_available"
+        state["booking"] = {"status": "no_slots_available"}
         return state
 
     collision_messages: list[str] = []
@@ -66,7 +51,7 @@ def booking_agent(state: Dict[str, Any]) -> Dict[str, Any]:
             )
             continue
 
-        booking_details: Dict[str, Any] = {
+        booking_details: dict[str, Any] = {
             "doctor_id": doctor_id,
             "start_time": start_time,
             "end_time": selected_slot.get("end"),
@@ -77,35 +62,41 @@ def booking_agent(state: Dict[str, Any]) -> Dict[str, Any]:
 
         try:
             confirmation = manager.finalize_booking(booking_details)
-            state["status"] = "confirmed"
+            state["booking"] = {"status": "confirmed", "appointment_id": confirmation.get("id")}
             state["appointment"] = confirmation
             return state
-        except Exception as e:  # noqa: BLE001 — surface as booking_failed after retries
+        except Exception as e:  # noqa: BLE001
             last_commit_error = str(e)
             continue
 
     if last_commit_error:
-        state["status"] = "booking_failed"
+        state["booking"] = {"status": "booking_failed", "detail": last_commit_error}
         if "errors" not in state:
             state["errors"] = []
-        state["errors"].append({
-            "code": "BOOKING_ERROR",
-            "message": f"Transactional commit failed after trying {len(slots)} slot(s): {last_commit_error}",
-            "agent": "BookingAgent",
-        })
+        state["errors"].append(
+            {
+                "code": "BOOKING_ERROR",
+                "message": (
+                    f"Transactional commit failed after trying {len(slots)} slot(s): {last_commit_error}"
+                ),
+                "agent": "BookingAgent",
+            }
+        )
         return state
 
-    state["status"] = "conflict_detected"
-    if "errors" not in state:
-        state["errors"] = []
     summary = (
         collision_messages[0]
         if len(collision_messages) == 1
         else "All candidate slots are already booked."
     )
-    state["errors"].append({
-        "code": "BOOKING_COLLISION",
-        "message": summary,
-        "agent": "BookingAgent",
-    })
+    state["booking"] = {"status": "conflict_detected", "detail": summary}
+    if "errors" not in state:
+        state["errors"] = []
+    state["errors"].append(
+        {
+            "code": "BOOKING_COLLISION",
+            "message": summary,
+            "agent": "BookingAgent",
+        }
+    )
     return state

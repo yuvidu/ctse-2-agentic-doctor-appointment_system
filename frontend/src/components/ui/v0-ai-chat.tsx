@@ -67,6 +67,8 @@ export interface VercelV0ChatProps {
   errorMessage?: string | null;
   heading?: string;
   placeholder?: string;
+  /** Merged onto the root wrapper (e.g. max width for column layouts). */
+  className?: string;
 }
 
 export function VercelV0Chat({
@@ -75,6 +77,7 @@ export function VercelV0Chat({
   errorMessage = null,
   heading = "What can I help you book?",
   placeholder = "Describe the appointment you need (specialty, date, preferences)…",
+  className,
 }: VercelV0ChatProps) {
   const [value, setValue] = useState("");
   const { textareaRef, adjustHeight } = useAutoResizeTextarea({
@@ -98,7 +101,12 @@ export function VercelV0Chat({
   };
 
   return (
-    <div className="flex w-full max-w-4xl flex-col items-center space-y-8 p-4">
+    <div
+      className={cn(
+        "flex w-full max-w-4xl flex-col items-center space-y-8 p-4",
+        className,
+      )}
+    >
       <h1 className="text-center text-3xl font-bold tracking-tight text-white drop-shadow-md md:text-4xl">
         {heading}
       </h1>
@@ -113,7 +121,7 @@ export function VercelV0Chat({
       ) : null}
 
       <div className="w-full">
-        <div className="relative rounded-xl border border-white/10 bg-zinc-950/55 shadow-lg backdrop-blur-md">
+        <div className="relative rounded-xl border border-white/10 bg-zinc-950/50 shadow-inner backdrop-blur-md">
           <div className="overflow-y-auto">
             <Textarea
               ref={textareaRef}

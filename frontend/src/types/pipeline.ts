@@ -1,5 +1,6 @@
-/** Notification agent slice from `run_system` (mock send + copy). */
+/** Notification agent slice from `run_system` (mock send, skip, or failure). */
 export interface NotificationPayload {
+  /** `sent` | `failed` | `skipped` (no confirmed booking — no mock SMS) */
   status?: string;
   channel?: string | null;
   message?: string;
@@ -17,6 +18,13 @@ export interface AppointmentPreview {
   channel?: string;
 }
 
+/** Booking agent slice (local JSON commit; does not replace Intent ``status``). */
+export interface BookingPayload {
+  status?: string;
+  appointment_id?: string;
+  detail?: string;
+}
+
 /** Subset of `POST /api/pipeline` response used by the UI. */
 export interface PipelineResponse {
   user_input?: string;
@@ -25,6 +33,7 @@ export interface PipelineResponse {
   errors?: unknown[];
   availability_status?: string;
   availability_errors?: unknown[];
+  booking?: BookingPayload;
   available_slots?: string[];
   availability?: {
     available_slots?: Array<{

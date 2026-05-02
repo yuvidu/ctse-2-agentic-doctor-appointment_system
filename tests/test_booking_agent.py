@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -14,7 +14,6 @@ from tools.booking_tools.booking_manager import BookingManager
 
 @pytest.fixture
 def mock_state() -> dict:
-    """Provides a baseline state for testing."""
     return {
         "user_input": "I need a dentist appointment",
         "availability_status": "availability_ok",
@@ -33,8 +32,7 @@ def mock_state() -> dict:
     }
 
 
-def test_booking_success(mock_state):
-    """Success Case: Booking is saved, ID is generated, and state is updated."""
+def test_booking_success(mock_state: dict) -> None:
     with patch("agents.booking_agent.BookingManager") as MockManager:
         mock_instance = MockManager.return_value
         mock_instance.is_slot_available.return_value = True
@@ -46,34 +44,31 @@ def test_booking_success(mock_state):
 
         updated_state = booking_agent(mock_state)
 
-        assert updated_state["status"] == "confirmed"
+        assert updated_state["booking"]["status"] == "confirmed"
         assert updated_state["appointment"]["id"] == "APP-TEST1"
         assert updated_state["appointment"]["status"] == "confirmed"
 
 
-def test_booking_collision(mock_state):
-    """Collision Case: If the checker finds a conflict, update state with error."""
+def test_booking_collision(mock_state: dict) -> None:
     with patch("agents.booking_agent.BookingManager") as MockManager:
         mock_instance = MockManager.return_value
         mock_instance.is_slot_available.return_value = False
 
         updated_state = booking_agent(mock_state)
 
-        assert updated_state["status"] == "conflict_detected"
+        assert updated_state["booking"]["status"] == "conflict_detected"
         assert any(e["code"] == "BOOKING_COLLISION" for e in updated_state["errors"])
 
 
-def test_booking_no_slots(mock_state):
-    """Validation Case: Handle state where available_slots is empty."""
+def test_booking_no_slots(mock_state: dict) -> None:
     mock_state["availability"]["available_slots"] = []
 
     updated_state = booking_agent(mock_state)
 
-    assert updated_state["status"] == "no_slots_available"
+    assert updated_state["booking"]["status"] == "no_slots_available"
 
 
-def test_booking_uses_availability_status_only_from_availability_agent():
-    """Availability sets ``status`` (not ``availability_ok`` on a separate key)."""
+def test_booking_uses_availability_status_only_from_availability_agent() -> None:
     state = {
         "user_input": "Book cardiologist",
         "status": "availability_ok",
@@ -101,13 +96,12 @@ def test_booking_uses_availability_status_only_from_availability_agent():
 
         updated = booking_agent(state)
 
-        assert updated["status"] == "confirmed"
+        assert updated["booking"]["status"] == "confirmed"
         assert updated["appointment"]["id"] == "APP-AVAIL"
         mock_instance.finalize_booking.assert_called_once()
 
 
-def test_booking_retries_next_slot_on_collision(mock_state):
-    """If the first ranked slot collides, try the next candidate."""
+def test_booking_retries_next_slot_on_collision(mock_state: dict) -> None:
     mock_state["availability"]["available_slots"] = [
         {
             "doctor_id": "DOC-TAKEN",
@@ -136,15 +130,14 @@ def test_booking_retries_next_slot_on_collision(mock_state):
 
         updated_state = booking_agent(mock_state)
 
-        assert updated_state["status"] == "confirmed"
+        assert updated_state["booking"]["status"] == "confirmed"
         assert updated_state["appointment"]["id"] == "APP-SECOND"
         assert mock_instance.is_slot_available.call_count == 2
         second_call = mock_instance.finalize_booking.call_args[0][0]
         assert second_call["doctor_id"] == "DOC-FREE"
 
 
-def test_booking_manager_db_ops(tmp_path):
-    """Test BookingManager local file operations and ID generation."""
+def test_booking_manager_db_ops(tmp_path: Path) -> None:
     test_db = tmp_path / "appointments.json"
     manager = BookingManager(db_path=str(test_db))
 
@@ -154,19 +147,15 @@ def test_booking_manager_db_ops(tmp_path):
         "patient": "John Doe",
     }
 
-    # Test availability
     assert manager.is_slot_available("DOC-X", "2024-07-01T09:00:00") is True
 
-    # Test commit
     confirmation = manager.finalize_booking(details)
     assert confirmation["id"].startswith("APP-")
     assert confirmation["status"] == "confirmed"
 
-    # Test collision after commit
     assert manager.is_slot_available("DOC-X", "2024-07-01T09:00:00") is False
 
-    # Verify file content
-    with open(test_db, "r") as f:
+    with test_db.open(encoding="utf-8") as f:
         data = json.load(f)
-        assert len(data) == 1
-        assert data[0]["id"] == confirmation["id"]
+    assert len(data) == 1
+    assert data[0]["id"] == confirmation["id"]

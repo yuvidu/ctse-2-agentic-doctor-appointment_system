@@ -66,3 +66,13 @@
     @apply min-h-screen bg-background text-foreground antialiased;
   }
 }
+
+/* Match chat + pipeline: neutral zinc glass (avoid purple-tinted shadcn `card` on this page). */
+@layer components {
+  .mas-panel {
+    @apply rounded-xl border border-white/10 bg-zinc-950/50 p-3 shadow-inner backdrop-blur-sm;
+  }
+  .mas-panel-inner {
+    @apply rounded-lg border border-white/10 bg-black/25;
+  }
+}

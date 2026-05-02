@@ -41,6 +41,7 @@ frontend/.vite/
 logs.txt
 *.log
 data/notification_appointments.json
+data/appointments.json
 
 # --- OS & editors ---
 .DS_Store

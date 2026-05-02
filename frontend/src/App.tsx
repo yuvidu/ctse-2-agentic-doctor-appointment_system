@@ -1,3 +1,4 @@
+import { AppointmentsCalendar } from "@/components/AppointmentsCalendar";
 import { NotificationPreviewDialog } from "@/components/NotificationPreviewDialog";
 import Plan from "@/components/ui/agent-plan";
 import { SmokeBackground } from "@/components/ui/spooky-smoke-animation";
@@ -28,6 +29,7 @@ export default function App() {
   const [notificationPreview, setNotificationPreview] =
     useState<NotificationPreviewPayload | null>(null);
   const [openNotificationAfterSlots, setOpenNotificationAfterSlots] = useState(false);
+  const [calendarRefresh, setCalendarRefresh] = useState(0);
 
   useEffect(() => {
     if (!slotsOpen && openNotificationAfterSlots && notificationPreview) {
@@ -67,22 +69,14 @@ export default function App() {
         return;
       }
       setPlanTasks((t) => applyPipelineResultToTasks(t, data));
+      setCalendarRefresh((n) => n + 1);
 
       const preview = extractNotificationPreview(data);
       setNotificationPreview(preview);
 
       const lines = extractSlotLines(data);
       setSlotLines(lines);
-      if (data.status === "confirmed" && data.appointment) {
-        const a = data.appointment as Record<string, unknown>;
-        const id = String(a.id ?? a.appointment_id ?? "");
-        const doc = String(a.doctor_id ?? a.doctor ?? "");
-        const when = String(a.start_time ?? a.time_iso ?? "");
-        setLastSummary(
-          `Success! Appointment booked: ${id} with doctor ${doc} at ${when}.`,
-        );
-        setSlotsOpen(false);
-      } else if (lines.length > 0) {
+      if (lines.length > 0) {
         setSlotsOpen(true);
         setLastSummary(null);
         if (preview) setOpenNotificationAfterSlots(true);
@@ -95,9 +89,7 @@ export default function App() {
           setLastSummary(
             data.status === "complete"
               ? "No available slots for the requested filters."
-              : data.status === "conflict_detected"
-                ? "The selected slot is no longer available. Please try again."
-                : "Intent needs more information or validation failed.",
+              : "Intent needs more information or validation failed.",
           );
         }
       }
@@ -115,25 +107,42 @@ export default function App() {
         <SmokeBackground smokeColor="#5b21b6" />
       </div>
 
-      <div className="relative z-10 mx-auto flex min-h-dvh max-w-7xl flex-col gap-4 p-3 md:flex-row md:p-6">
-        <main className="flex flex-1 flex-col items-center justify-center">
-          <VercelV0Chat
-            onSend={onSend}
-            disabled={busy}
-            errorMessage={error}
-            heading="Healthcare scheduling assistant"
-            placeholder="e.g. I need a cardiologist in Colombo on 2026-05-02 morning…"
-          />
-          {lastSummary && !error ? (
-            <p className="mt-4 max-w-xl text-center text-sm text-zinc-300">
-              {lastSummary}
-            </p>
-          ) : null}
-        </main>
+      <div className="relative z-10 mx-auto w-full max-w-7xl px-4 py-6 md:px-6 md:py-8">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(300px,26rem)] lg:items-start lg:gap-x-10 lg:gap-y-0 xl:gap-x-12">
+          <div className="flex min-h-0 min-w-0 flex-col gap-6 lg:gap-8">
+            <main className="flex w-full flex-col items-center justify-center lg:min-h-[min(40vh,320px)]">
+              <VercelV0Chat
+                className="max-w-xl w-full md:max-w-lg lg:max-w-xl"
+                onSend={onSend}
+                disabled={busy}
+                errorMessage={error}
+                heading="Healthcare scheduling assistant"
+                placeholder="e.g. I need a cardiologist in Colombo on 2026-05-02 morning…"
+              />
+              {lastSummary && !error ? (
+                <p className="mt-4 max-w-xl px-2 text-center text-sm text-zinc-300">
+                  {lastSummary}
+                </p>
+              ) : null}
+            </main>
 
-        <aside className="w-full shrink-0 md:h-auto md:w-[380px] md:max-h-[calc(100dvh-3rem)]">
-          <Plan tasks={planTasks} onTasksChange={setPlanTasks} />
-        </aside>
+            <section className="mas-panel w-full" aria-label="Pipeline activity">
+              <p className="mb-2 text-center text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-500">
+                Pipeline activity
+              </p>
+              <div className="max-h-[min(320px,42vh)] overflow-y-auto pr-1 md:max-h-[min(400px,48vh)]">
+                <Plan tasks={planTasks} onTasksChange={setPlanTasks} />
+              </div>
+            </section>
+          </div>
+
+          <section
+            className="min-h-0 min-w-0 lg:sticky lg:top-6 lg:self-start"
+            aria-label="Booked appointments"
+          >
+            <AppointmentsCalendar refreshTrigger={calendarRefresh} />
+          </section>
+        </div>
       </div>
 
       <SlotsDialog

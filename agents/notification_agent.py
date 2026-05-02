@@ -37,6 +37,37 @@ def extract_json(text: str) -> dict[str, Any]:
     return {}
 
 
+def _llm_message_should_use_fallback(text: str) -> bool:
+    """True when assistant text is empty, contradictory, or looks like a schema/tool error."""
+    t = (text or "").strip().lower()
+    if not t:
+        return True
+    needles = (
+        "failed to send",
+        "could not send",
+        "unable to send",
+        "notification failed",
+        "send failed",
+        "did not send",
+        "missing required field",
+        "validation error",
+        "pydantic",
+        "field required",
+        "must be str",
+        "invalid json",
+        "error:",
+    )
+    return any(n in t for n in needles)
+
+
+def _confirmation_fallback(validated: AppointmentModel) -> str:
+    return (
+        f"Appointment confirmed: ID {validated.appointment_id} — "
+        f"{validated.user_name} with Dr. {validated.doctor} ({validated.specialization}) "
+        f"on {validated.time_iso}"
+    )
+
+
 def notification_agent(state: dict[str, Any]) -> dict[str, Any]:
     """Format summary message, persist preview row, mock-send notification.
 
@@ -109,6 +140,10 @@ def notification_agent(state: dict[str, Any]) -> dict[str, Any]:
         channel=channel,
         logger=log_event,
     )
-    state["notification"] = dict(result)
-    log_event("NotificationAgent", "finish", {"notification": dict(result)})
+    out = dict(result)
+    if out.get("status") == "sent" and _llm_message_should_use_fallback(out.get("message", "")):
+        out["message"] = _confirmation_fallback(validated)
+        log_event("NotificationAgent", "message_sanitized", {"reason": "llm_unusable_notification_copy"})
+    state["notification"] = out
+    log_event("NotificationAgent", "finish", {"notification": dict(out)})
     return state

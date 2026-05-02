@@ -6,27 +6,6 @@ function cloneTasks(tasks: Task[]): Task[] {
   return structuredClone(tasks);
 }
 
-/** Intent agent block from ``run_system`` — top-level ``status`` is pipeline outcome, not intent. */
-function intentBlockStatus(data: PipelineResponse): string | undefined {
-  const block = data.intent;
-  if (!block || typeof block !== "object") return undefined;
-  const s = (block as { status?: unknown }).status;
-  return typeof s === "string" ? s : undefined;
-}
-
-function resetStages(next: Task[], ids: string[]) {
-  for (const id of ids) {
-    const i = next.findIndex((t) => t.id === id);
-    if (i === -1) continue;
-    const t = next[i];
-    next[i] = {
-      ...t,
-      status: "pending",
-      subtasks: t.subtasks.map((s) => ({ ...s, status: "pending" })),
-    };
-  }
-}
-
 export function freshHealthcareTasks(): Task[] {
   return cloneTasks(HEALTHCARE_PIPELINE_TASKS);
 }
@@ -54,11 +33,9 @@ export function applyPipelineResultToTasks(
   data: PipelineResponse,
 ): Task[] {
   const next = cloneTasks(tasks);
-  const intentSt = intentBlockStatus(data);
-  const intentComplete = intentSt === "complete";
-  const intentHadError =
-    intentSt === "error" ||
-    (Array.isArray(data.errors) && data.errors.length > 0);
+  const intentComplete = data.status === "complete";
+  const hadIntentErrors =
+    Array.isArray(data.errors) && data.errors.length > 0;
 
   const upsert = (id: string, updater: (t: Task) => Task) => {
     const i = next.findIndex((t) => t.id === id);
@@ -69,13 +46,19 @@ export function applyPipelineResultToTasks(
   if (!intentComplete) {
     upsert("1", (t) => ({
       ...t,
-      status: intentHadError ? "need-help" : "in-progress",
+      status: hadIntentErrors ? "need-help" : "in-progress",
       subtasks: t.subtasks.map((s, i) => ({
         ...s,
         status: i === 0 ? "completed" : i === 1 ? "in-progress" : "pending",
       })),
     }));
-    resetStages(next, ["2", "3", "4", "5"]);
+    for (const id of ["2", "3", "4", "5"]) {
+      upsert(id, (t) => ({
+        ...t,
+        status: "pending",
+        subtasks: t.subtasks.map((s) => ({ ...s, status: "pending" })),
+      }));
+    }
     return next;
   }
 
@@ -94,11 +77,9 @@ export function applyPipelineResultToTasks(
   const slotCount =
     (data.available_slots?.length ?? 0) ||
     (data.availability?.available_slots?.length ?? 0);
-  const availabilityStatus = data.availability_status ?? "";
   const availErr =
-    (Array.isArray(data.availability_errors) && data.availability_errors.length > 0) ||
-    availabilityStatus === "availability_missing_input" ||
-    availabilityStatus === "availability_failed";
+    Array.isArray(data.availability_errors) &&
+    data.availability_errors.length > 0;
 
   if (availErr) {
     upsert("3", (t) => ({
@@ -106,7 +87,13 @@ export function applyPipelineResultToTasks(
       status: "need-help",
       subtasks: t.subtasks.map((s) => ({ ...s, status: "need-help" })),
     }));
-    resetStages(next, ["4", "5"]);
+    for (const id of ["4", "5"]) {
+      upsert(id, (t) => ({
+        ...t,
+        status: "pending",
+        subtasks: t.subtasks.map((s) => ({ ...s, status: "pending" })),
+      }));
+    }
     return next;
   }
 
@@ -128,37 +115,50 @@ export function applyPipelineResultToTasks(
     }));
   }
 
-  upsert("4", (t) => ({
-    ...t,
-    status: slotCount > 0 ? "completed" : "in-progress",
-    subtasks: t.subtasks.map((s) => ({
-      ...s,
-      status: slotCount > 0 ? "completed" : "pending",
-    })),
-  }));
+  const availOk = data.availability_status === "availability_ok";
+  const bs = data.booking?.status;
+  const bookingOk = bs === "confirmed";
+  const bookingBad =
+    bs === "no_slots_available" ||
+    bs === "conflict_detected" ||
+    bs === "booking_failed";
 
-  const pipelineStatus = data.status ?? "";
-  const isConfirmed = pipelineStatus === "confirmed";
-  const isConflict = pipelineStatus === "conflict_detected";
-  const isBookingProblem =
-    pipelineStatus === "booking_failed" || pipelineStatus === "no_slots_available";
+  upsert("4", (t) => {
+    if (!availOk) {
+      return {
+        ...t,
+        status: "pending",
+        subtasks: t.subtasks.map((s) => ({ ...s, status: "pending" })),
+      };
+    }
+    if (bookingOk) {
+      return {
+        ...t,
+        status: "completed",
+        subtasks: t.subtasks.map((s) => ({ ...s, status: "completed" })),
+      };
+    }
+    if (bookingBad) {
+      return {
+        ...t,
+        status: "need-help",
+        subtasks: t.subtasks.map((s) => ({ ...s, status: "need-help" })),
+      };
+    }
+    return {
+      ...t,
+      status: "pending",
+      subtasks: t.subtasks.map((s) => ({ ...s, status: "pending" })),
+    };
+  });
 
+  const responseDone = intentComplete && !availErr;
   upsert("5", (t) => ({
     ...t,
-    status: isConfirmed
-      ? "completed"
-      : isConflict || isBookingProblem
-        ? "need-help"
-        : slotCount > 0
-          ? "in-progress"
-          : "pending",
+    status: responseDone ? "completed" : "pending",
     subtasks: t.subtasks.map((s) => ({
       ...s,
-      status: isConfirmed
-        ? "completed"
-        : isConflict || isBookingProblem
-          ? "need-help"
-          : "pending",
+      status: responseDone ? "completed" : "pending",
     })),
   }));
 

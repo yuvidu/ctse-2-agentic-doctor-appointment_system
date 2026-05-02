@@ -9,6 +9,7 @@ Constraints:
 - Input: JSON state containing `appointment` with keys: `appointment_id`, `user_name`, `user_contact`, `doctor`, `specialization`, `time_iso`, `channel`.
 - Output: Do NOT print a natural-language apology or verbose explanation to orchestrator. Return structured JSON via the orchestrator's state.
 - If fields are missing, set `state['notification']` to failed and include `errors`.
+- You only write the **SMS body text** (friendly confirmation). Never claim the message “failed to send”, “could not send”, or “unable to deliver” — the runtime performs the send after you return JSON; contradictory wording confuses users.
 
 Example Input (state snippet):
 {

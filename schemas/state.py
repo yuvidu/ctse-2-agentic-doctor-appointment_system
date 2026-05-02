@@ -54,6 +54,14 @@ class NotificationPayload(TypedDict, total=False):
     error: str | None
 
 
+class BookingPayload(TypedDict, total=False):
+    """Result slice from ``booking_agent`` (does not replace Intent top-level ``status``)."""
+
+    status: str
+    appointment_id: str
+    detail: str
+
+
 class GlobalState(TypedDict, total=False):
     """Pipeline slice passed to ``availability_agent``."""
 
@@ -63,4 +71,5 @@ class GlobalState(TypedDict, total=False):
     errors: list[ErrorEntry]
     status: str
     availability: AvailabilityPayload
+    booking: BookingPayload
     notification: NotificationPayload
