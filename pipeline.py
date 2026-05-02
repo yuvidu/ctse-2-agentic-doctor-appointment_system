@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from agents.availability_agent import availability_agent
+from agents.booking_agent import booking_agent
 from agents.crew_ai.crewai_agents import CREWAI_VERBOSE_FLAG, intent_agent_ai
 from agents.intent_agent import intent_agent
 from crewai import Crew, Task
@@ -64,5 +65,15 @@ def run_system(user_input: str) -> dict:
     ]
     if slots:
         state["doctor"] = str(slots[0].get("doctor_id", ""))
+
+    if avail_out.get("status") == "availability_ok":
+        final_state = booking_agent(avail_out)
+        state["appointment"] = final_state.get("appointment")
+        state["status"] = final_state.get("status")
+        if final_state.get("errors"):
+            # Append any new errors from the booking agent
+            existing_errors = state.get("errors", [])
+            new_errors = [e for e in final_state["errors"] if e not in existing_errors]
+            state["errors"].extend(new_errors)
 
     return state

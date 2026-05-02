@@ -53,7 +53,12 @@ export default function App() {
 
       const lines = extractSlotLines(data);
       setSlotLines(lines);
-      if (lines.length > 0) {
+      if (data.status === "confirmed" && data.appointment) {
+        setLastSummary(
+          `Success! Appointment booked: ${data.appointment.id} with doctor ${data.appointment.doctor_id} at ${data.appointment.start_time}.`,
+        );
+        setSlotsOpen(false);
+      } else if (lines.length > 0) {
         setSlotsOpen(true);
         setLastSummary(null);
       } else {
@@ -61,7 +66,9 @@ export default function App() {
         setLastSummary(
           data.status === "complete"
             ? "No available slots for the requested filters."
-            : "Intent needs more information or validation failed.",
+            : data.status === "conflict_detected"
+              ? "The selected slot is no longer available. Please try again."
+              : "Intent needs more information or validation failed.",
         );
       }
     } catch (e) {

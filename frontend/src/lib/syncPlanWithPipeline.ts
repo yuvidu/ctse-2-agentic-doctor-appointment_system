@@ -122,5 +122,17 @@ export function applyPipelineResultToTasks(
     })),
   }));
 
+  const isConfirmed = data.status === "confirmed";
+  const isConflict = data.status === "conflict_detected";
+
+  upsert("5", (t) => ({
+    ...t,
+    status: isConfirmed ? "completed" : isConflict ? "need-help" : slotCount > 0 ? "in-progress" : "pending",
+    subtasks: t.subtasks.map((s) => ({
+      ...s,
+      status: isConfirmed ? "completed" : isConflict ? "need-help" : "pending",
+    })),
+  }));
+
   return next;
 }

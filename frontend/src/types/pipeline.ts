@@ -18,4 +18,12 @@ export interface PipelineResponse {
     total_count?: number;
     ollama_ranking?: { rationale?: string; model?: string };
   };
+  appointment?: {
+    id?: string;
+    doctor_id?: string;
+    start_time?: string;
+    end_time?: string;
+    location?: string;
+    status?: string;
+  };
 }

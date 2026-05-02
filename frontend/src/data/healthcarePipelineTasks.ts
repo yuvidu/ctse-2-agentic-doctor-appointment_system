@@ -111,4 +111,31 @@ export const HEALTHCARE_PIPELINE_TASKS: Task[] = [
       },
     ],
   },
+  {
+    id: "5",
+    title: "Booking agent",
+    description: "Transactional Integrity Lead: Securely commit the selected slot.",
+    status: "pending",
+    priority: "high",
+    level: 0,
+    dependencies: ["3"],
+    subtasks: [
+      {
+        id: "5.1",
+        title: "Atomic collision check",
+        description: "Verify slot hasn't been taken since lookup.",
+        status: "pending",
+        priority: "high",
+        tools: ["booking_manager", "file-system"],
+      },
+      {
+        id: "5.2",
+        title: "Finalize booking",
+        description: "Generate ID and append to appointments database.",
+        status: "pending",
+        priority: "high",
+        tools: ["booking_agent", "SecureBookingCommiter"],
+      },
+    ],
+  },
 ];
