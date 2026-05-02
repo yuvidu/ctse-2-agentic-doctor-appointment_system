@@ -1,4 +1,9 @@
+import os
+
 import ollama
+
+_JUDGE_MODEL = os.environ.get("OLLAMA_MODEL", "llama3.2:3b")
+
 
 def judge_output(output: dict) -> str:
 
@@ -19,8 +24,8 @@ Answer ONLY: valid or invalid
 """
 
     response = ollama.chat(
-        model="llama3.2:3b",
-        messages=[{"role": "user", "content": prompt}]
+        model=_JUDGE_MODEL,
+        messages=[{"role": "user", "content": prompt}],
     )
 
     return response["message"]["content"]

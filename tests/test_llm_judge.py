@@ -16,9 +16,9 @@ def test_llm_judge_valid_case():
     print("Agent Output:", result)
     print("Judge Result:", evaluation)
 
-    # Optional assertion (VERY GOOD for marks)
-    evaluation_clean = evaluation.lower().strip().rstrip('.')
-    assert evaluation_clean in ["valid", "invalid"]
+    # SLMs may answer with a sentence; require leading verdict token.
+    evaluation_clean = evaluation.lower().strip()
+    assert evaluation_clean.startswith("valid") or evaluation_clean.startswith("invalid")
 
 if __name__ == "__main__":
     test_llm_judge_valid_case()

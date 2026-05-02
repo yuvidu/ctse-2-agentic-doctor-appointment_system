@@ -1,0 +1,114 @@
+import type { Task } from "@/types/planTask";
+
+/** Default CTSE Intent → Availability pipeline steps shown in the plan UI. */
+export const HEALTHCARE_PIPELINE_TASKS: Task[] = [
+  {
+    id: "1",
+    title: "Natural language intent",
+    description:
+      "CrewAI + Ollama extract structured booking intent from the user message.",
+    status: "pending",
+    priority: "high",
+    level: 0,
+    dependencies: [],
+    subtasks: [
+      {
+        id: "1.1",
+        title: "Crew kickoff",
+        description: "Run Crew task with intent agent (LLM).",
+        status: "pending",
+        priority: "high",
+        tools: ["crewai", "ollama"],
+      },
+      {
+        id: "1.2",
+        title: "Intent agent (repo)",
+        description: "Normalize output to intent schema and validation.",
+        status: "pending",
+        priority: "high",
+        tools: ["intent_agent", "llm_parsing_tool"],
+      },
+      {
+        id: "1.3",
+        title: "Specialty / field validation",
+        description: "Cross-check specialty and constraints via tools + API.",
+        status: "pending",
+        priority: "medium",
+        tools: ["validation_tool", "specializations-api"],
+      },
+    ],
+  },
+  {
+    id: "2",
+    title: "Bridge to availability state",
+    description: "Map intent repository fields into GlobalState for scheduling.",
+    status: "pending",
+    priority: "high",
+    level: 0,
+    dependencies: [],
+    subtasks: [
+      {
+        id: "2.1",
+        title: "intent_to_availability_state",
+        description: "Build typed payload (specialty, date, location, etc.).",
+        status: "pending",
+        priority: "high",
+        tools: ["integration-bridge"],
+      },
+    ],
+  },
+  {
+    id: "3",
+    title: "Availability agent",
+    description: "Load schedules, filter slots, optional Ollama ranking.",
+    status: "pending",
+    priority: "high",
+    level: 0,
+    dependencies: ["1", "2"],
+    subtasks: [
+      {
+        id: "3.1",
+        title: "Load sample schedules",
+        description: "Read JSON schedules and apply filters.",
+        status: "pending",
+        priority: "high",
+        tools: ["schedule_availability", "file-system"],
+      },
+      {
+        id: "3.2",
+        title: "Match slots",
+        description: "Intersect doctor availability with user preferences.",
+        status: "pending",
+        priority: "high",
+        tools: ["availability_agent"],
+      },
+      {
+        id: "3.3",
+        title: "Optional slot ranking",
+        description: "Ollama ranks candidate slots when configured.",
+        status: "pending",
+        priority: "low",
+        tools: ["ollama"],
+      },
+    ],
+  },
+  {
+    id: "4",
+    title: "Response assembly",
+    description: "Merge intent + availability into API JSON for the UI.",
+    status: "pending",
+    priority: "medium",
+    level: 0,
+    dependencies: ["3"],
+    subtasks: [
+      {
+        id: "4.1",
+        title: "Flatten slots for display",
+        description: "doctor_id | start – end | location strings.",
+        status: "pending",
+        priority: "medium",
+        tools: ["pipeline", "fastapi"],
+      },
+    ],
+  },
+];
