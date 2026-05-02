@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from agents.availability_agent import availability_agent
-from agents.crew_ai.crewai_agents import intent_agent_ai
+from agents.crew_ai.crewai_agents import CREWAI_VERBOSE_FLAG, intent_agent_ai
 from agents.intent_agent import intent_agent
 from crewai import Crew, Task
 from integration.intent_to_availability_state import global_state_from_intent_repo
@@ -31,7 +31,11 @@ def run_system(user_input: str) -> dict:
         agent=intent_agent_ai,
         expected_output="Structured JSON",
     )
-    crew = Crew(agents=[intent_agent_ai], tasks=[intent_task], verbose=True)
+    crew = Crew(
+        agents=[intent_agent_ai],
+        tasks=[intent_task],
+        verbose=CREWAI_VERBOSE_FLAG,
+    )
     crew.kickoff()
 
     intent_response = intent_agent(state)

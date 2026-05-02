@@ -26,26 +26,35 @@
     --radius: 0.5rem;
   }
 
+  /* Purple-tinted dark surfaces (matches smoke + static demo feel). */
   .dark {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 240 10% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 263 70% 58%;
+    --background: 262 32% 8%;
+    --foreground: 270 20% 96%;
+    --card: 262 28% 12%;
+    --card-foreground: 270 15% 96%;
+    --popover: 262 30% 11%;
+    --popover-foreground: 270 15% 96%;
+    --primary: 263 72% 60%;
     --primary-foreground: 210 40% 98%;
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 263 70% 58%;
+    --secondary: 262 22% 18%;
+    --secondary-foreground: 270 15% 92%;
+    --muted: 262 18% 20%;
+    --muted-foreground: 265 12% 68%;
+    --accent: 262 25% 22%;
+    --accent-foreground: 270 15% 95%;
+    --destructive: 0 62.8% 42%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 265 18% 24%;
+    --input: 265 18% 22%;
+    --ring: 263 72% 55%;
+  }
+
+  dialog {
+    margin: auto;
+  }
+
+  dialog::backdrop {
+    background: rgb(0 0 0 / 0.55);
   }
 }
 

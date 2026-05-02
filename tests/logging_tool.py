@@ -1,6 +1,9 @@
 from datetime import datetime
 from typing import Any
 
+from utils.env_flags import mas_debug
+
+
 def log_event(agent: str, step: str, data: Any) -> None:
     """
     Log agent activity with timestamp.
@@ -18,9 +21,10 @@ def log_event(agent: str, step: str, data: Any) -> None:
         "data": str(data)
     }
 
-    # ✅ Print to console
+    if not mas_debug():
+        return
+
     print(f"[LOG] {log}")
 
-    # ✅ Save to file
-    with open("logs.txt", "a") as f:
+    with open("logs.txt", "a", encoding="utf-8") as f:
         f.write(str(log) + "\n")

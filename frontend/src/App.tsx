@@ -1,12 +1,15 @@
 import Plan from "@/components/ui/agent-plan";
 import { SmokeBackground } from "@/components/ui/spooky-smoke-animation";
 import { VercelV0Chat } from "@/components/ui/v0-ai-chat";
+import { SlotsDialog } from "@/components/SlotsDialog";
 import {
   applyPipelineResultToTasks,
   freshHealthcareTasks,
   markPlanRunning,
 } from "@/lib/syncPlanWithPipeline";
 import { postPipeline } from "@/lib/api";
+import { formatPipelineNetworkError } from "@/lib/pipelineErrors";
+import { extractSlotLines } from "@/lib/slotsFromPipeline";
 import type { PipelineResponse } from "@/types/pipeline";
 import type { Task } from "@/types/planTask";
 import { useCallback, useState } from "react";
@@ -16,10 +19,14 @@ export default function App() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastSummary, setLastSummary] = useState<string | null>(null);
+  const [slotLines, setSlotLines] = useState<string[]>([]);
+  const [slotsOpen, setSlotsOpen] = useState(false);
 
   const onSend = useCallback(async (message: string) => {
     setError(null);
     setLastSummary(null);
+    setSlotsOpen(false);
+    setSlotLines([]);
     setBusy(true);
     setPlanTasks((t) => markPlanRunning(t));
     try {
@@ -43,16 +50,22 @@ export default function App() {
         return;
       }
       setPlanTasks((t) => applyPipelineResultToTasks(t, data));
-      const slots = data.available_slots?.length ?? 0;
-      setLastSummary(
-        data.status === "complete"
-          ? slots > 0
-            ? `Found ${slots} slot(s). Check the JSON in devtools or extend the UI to list them.`
-            : "Intent complete — no available slots for the requested filters."
-          : "Intent needs more information or validation failed.",
-      );
+
+      const lines = extractSlotLines(data);
+      setSlotLines(lines);
+      if (lines.length > 0) {
+        setSlotsOpen(true);
+        setLastSummary(null);
+      } else {
+        setSlotsOpen(false);
+        setLastSummary(
+          data.status === "complete"
+            ? "No available slots for the requested filters."
+            : "Intent needs more information or validation failed.",
+        );
+      }
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Network error");
+      setError(formatPipelineNetworkError(e));
       setPlanTasks(freshHealthcareTasks);
     } finally {
       setBusy(false);
@@ -75,7 +88,7 @@ export default function App() {
             placeholder="e.g. I need a cardiologist in Colombo on 2026-05-02 morning…"
           />
           {lastSummary && !error ? (
-            <p className="mt-4 max-w-xl text-center text-sm text-muted-foreground">
+            <p className="mt-4 max-w-xl text-center text-sm text-zinc-300">
               {lastSummary}
             </p>
           ) : null}
@@ -85,6 +98,12 @@ export default function App() {
           <Plan tasks={planTasks} onTasksChange={setPlanTasks} />
         </aside>
       </div>
+
+      <SlotsDialog
+        open={slotsOpen}
+        lines={slotLines}
+        onClose={() => setSlotsOpen(false)}
+      />
     </div>
   );
 }

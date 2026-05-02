@@ -26,3 +26,17 @@
 {'time': '2026-05-02T10:16:26.870427', 'agent': 'parsing_tool', 'step': 'llm_raw_output', 'data': '{"specialization": "Cardiology", "date": "2026-05-02", "time_preference": "morning"}'}
 {'time': '2026-05-02T10:20:54.329254', 'agent': 'parsing_tool', 'step': 'llm_call_start_with_this_input', 'data': 'I need a cardiology appointment on 2026-05-02 in the morning.'}
 {'time': '2026-05-02T10:20:55.041866', 'agent': 'parsing_tool', 'step': 'llm_raw_output', 'data': '{"specialization": "Cardiology", "date": "2026-05-02", "time_preference": "morning"}'}
+{'time': '2026-05-02T10:26:49.298168', 'agent': 'parsing_tool', 'step': 'llm_call_start_with_this_input', 'data': 'i need a cardiologist in colombo on 2026-05-02 morning'}
+{'time': '2026-05-02T10:26:50.040626', 'agent': 'parsing_tool', 'step': 'llm_raw_output', 'data': '{\n  "specialization": "Cardiology",\n  "date": "2026-05-02",\n  "time_preference": "morning"\n}'}
+{'time': '2026-05-02T10:27:02.907119', 'agent': 'parsing_tool', 'step': 'llm_call_start_with_this_input', 'data': 'i need a cardiologist in colombo on 2026-05-02 morning'}
+{'time': '2026-05-02T10:27:03.577661', 'agent': 'parsing_tool', 'step': 'llm_raw_output', 'data': '{"specialization": "Cardiology", "date": "2026-05-02", "time_preference": "morning"}'}
+{'time': '2026-05-02T10:32:45.841649', 'agent': 'parsing_tool', 'step': 'llm_call_start_with_this_input', 'data': 'i need a cardiologist in Colombo on 2026-05-02 morning'}
+{'time': '2026-05-02T10:32:46.599115', 'agent': 'parsing_tool', 'step': 'llm_raw_output', 'data': '{\n  "specialization": "Cardiologist",\n  "date": "2026-05-02",\n  "time_preference": "morning"\n}'}
+{'time': '2026-05-02T10:33:18.369323', 'agent': 'parsing_tool', 'step': 'llm_call_start_with_this_input', 'data': 'i need a cardiologist in Colombo on 2026-05-02 morning'}
+{'time': '2026-05-02T10:33:18.967968', 'agent': 'parsing_tool', 'step': 'llm_raw_output', 'data': '{"specialization": "Cardiology", "date": "2026-05-02", "time_preference": "morning"}'}
+{'time': '2026-05-02T10:35:50.576886', 'agent': 'parsing_tool', 'step': 'llm_call_start_with_this_input', 'data': 'i need a cardiologist in colombo on 2026-05-02 morning'}
+{'time': '2026-05-02T10:35:51.191420', 'agent': 'parsing_tool', 'step': 'llm_raw_output', 'data': '{"specialization": "Cardiology", "date": "2026-05-02", "time_preference": "morning"}'}
+{'time': '2026-05-02T10:38:34.767100', 'agent': 'parsing_tool', 'step': 'llm_call_start_with_this_input', 'data': 'i need a cardiologist in colombo on 2026-05-02 morning'}
+{'time': '2026-05-02T10:38:35.366333', 'agent': 'parsing_tool', 'step': 'llm_raw_output', 'data': '{"specialization": "Cardiologist", "date": "2026-05-02", "time_preference": "morning"}'}
+{'time': '2026-05-02T10:38:37.872637', 'agent': 'parsing_tool', 'step': 'llm_call_start_with_this_input', 'data': 'i need a cardiologist in colombo on 2026-05-02 morning'}
+{'time': '2026-05-02T10:38:38.453405', 'agent': 'parsing_tool', 'step': 'llm_raw_output', 'data': '{"specialization": "Cardiology", "date": "2026-05-02", "time_preference": "morning"}'}

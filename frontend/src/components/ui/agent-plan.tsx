@@ -185,9 +185,9 @@ export default function Plan({
   };
 
   return (
-    <div className="h-full overflow-auto bg-background/80 p-2 text-foreground backdrop-blur-md md:rounded-lg md:border md:border-border md:shadow">
+    <div className="h-full overflow-auto border border-white/10 bg-zinc-950/50 p-2 text-foreground shadow-lg backdrop-blur-md md:rounded-xl">
       <motion.div
-        className="overflow-hidden rounded-lg border border-border bg-card/95 shadow"
+        className="overflow-hidden rounded-lg border border-white/10 bg-zinc-950/65 shadow-md backdrop-blur-sm"
         initial={{ opacity: 0, y: 10 }}
         animate={{
           opacity: 1,
