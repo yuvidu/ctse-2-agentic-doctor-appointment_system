@@ -6,6 +6,27 @@ function cloneTasks(tasks: Task[]): Task[] {
   return structuredClone(tasks);
 }
 
+/** Intent agent block from ``run_system`` — top-level ``status`` is pipeline outcome, not intent. */
+function intentBlockStatus(data: PipelineResponse): string | undefined {
+  const block = data.intent;
+  if (!block || typeof block !== "object") return undefined;
+  const s = (block as { status?: unknown }).status;
+  return typeof s === "string" ? s : undefined;
+}
+
+function resetStages(next: Task[], ids: string[]) {
+  for (const id of ids) {
+    const i = next.findIndex((t) => t.id === id);
+    if (i === -1) continue;
+    const t = next[i];
+    next[i] = {
+      ...t,
+      status: "pending",
+      subtasks: t.subtasks.map((s) => ({ ...s, status: "pending" })),
+    };
+  }
+}
+
 export function freshHealthcareTasks(): Task[] {
   return cloneTasks(HEALTHCARE_PIPELINE_TASKS);
 }
@@ -33,9 +54,11 @@ export function applyPipelineResultToTasks(
   data: PipelineResponse,
 ): Task[] {
   const next = cloneTasks(tasks);
-  const intentComplete = data.status === "complete";
-  const hadIntentErrors =
-    Array.isArray(data.errors) && data.errors.length > 0;
+  const intentSt = intentBlockStatus(data);
+  const intentComplete = intentSt === "complete";
+  const intentHadError =
+    intentSt === "error" ||
+    (Array.isArray(data.errors) && data.errors.length > 0);
 
   const upsert = (id: string, updater: (t: Task) => Task) => {
     const i = next.findIndex((t) => t.id === id);
@@ -46,19 +69,13 @@ export function applyPipelineResultToTasks(
   if (!intentComplete) {
     upsert("1", (t) => ({
       ...t,
-      status: hadIntentErrors ? "need-help" : "in-progress",
+      status: intentHadError ? "need-help" : "in-progress",
       subtasks: t.subtasks.map((s, i) => ({
         ...s,
         status: i === 0 ? "completed" : i === 1 ? "in-progress" : "pending",
       })),
     }));
-    for (const id of ["2", "3", "4"]) {
-      upsert(id, (t) => ({
-        ...t,
-        status: "pending",
-        subtasks: t.subtasks.map((s) => ({ ...s, status: "pending" })),
-      }));
-    }
+    resetStages(next, ["2", "3", "4", "5"]);
     return next;
   }
 
@@ -77,9 +94,11 @@ export function applyPipelineResultToTasks(
   const slotCount =
     (data.available_slots?.length ?? 0) ||
     (data.availability?.available_slots?.length ?? 0);
+  const availabilityStatus = data.availability_status ?? "";
   const availErr =
-    Array.isArray(data.availability_errors) &&
-    data.availability_errors.length > 0;
+    (Array.isArray(data.availability_errors) && data.availability_errors.length > 0) ||
+    availabilityStatus === "availability_missing_input" ||
+    availabilityStatus === "availability_failed";
 
   if (availErr) {
     upsert("3", (t) => ({
@@ -87,11 +106,7 @@ export function applyPipelineResultToTasks(
       status: "need-help",
       subtasks: t.subtasks.map((s) => ({ ...s, status: "need-help" })),
     }));
-    upsert("4", (t) => ({
-      ...t,
-      status: "pending",
-      subtasks: t.subtasks.map((s) => ({ ...s, status: "pending" })),
-    }));
+    resetStages(next, ["4", "5"]);
     return next;
   }
 
@@ -122,15 +137,28 @@ export function applyPipelineResultToTasks(
     })),
   }));
 
-  const isConfirmed = data.status === "confirmed";
-  const isConflict = data.status === "conflict_detected";
+  const pipelineStatus = data.status ?? "";
+  const isConfirmed = pipelineStatus === "confirmed";
+  const isConflict = pipelineStatus === "conflict_detected";
+  const isBookingProblem =
+    pipelineStatus === "booking_failed" || pipelineStatus === "no_slots_available";
 
   upsert("5", (t) => ({
     ...t,
-    status: isConfirmed ? "completed" : isConflict ? "need-help" : slotCount > 0 ? "in-progress" : "pending",
+    status: isConfirmed
+      ? "completed"
+      : isConflict || isBookingProblem
+        ? "need-help"
+        : slotCount > 0
+          ? "in-progress"
+          : "pending",
     subtasks: t.subtasks.map((s) => ({
       ...s,
-      status: isConfirmed ? "completed" : isConflict ? "need-help" : "pending",
+      status: isConfirmed
+        ? "completed"
+        : isConflict || isBookingProblem
+          ? "need-help"
+          : "pending",
     })),
   }));
 
