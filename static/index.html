@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Clinic scheduling — Intent &amp; Availability</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0f1419;
+      --surface: #1a222d;
+      --border: #2d3a4d;
+      --text: #e8eef5;
+      --muted: #8b9cb3;
+      --accent: #3d9cf0;
+      --accent-dim: #2563a8;
+      --success: #34c759;
+      --warn: #f5a524;
+      --err: #ef5b5b;
+      --radius: 12px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "DM Sans", system-ui, sans-serif;
+      background: radial-gradient(1200px 600px at 10% -10%, #1a2a3d 0%, var(--bg) 55%);
+      color: var(--text);
+      line-height: 1.5;
+    }
+    .wrap {
+      max-width: 920px;
+      margin: 0 auto;
+      padding: 2rem 1.25rem 3rem;
+    }
+    header h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin: 0 0 0.35rem;
+    }
+    header p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem 1.35rem;
+      margin-top: 1.5rem;
+    }
+    label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      margin-bottom: 0.5rem;
+    }
+    textarea {
+      width: 100%;
+      min-height: 110px;
+      resize: vertical;
+      padding: 0.85rem 1rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: #121920;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 1rem;
+    }
+    textarea:focus {
+      outline: 2px solid var(--accent-dim);
+      outline-offset: 1px;
+    }
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      align-items: center;
+      margin-top: 1rem;
+    }
+    button {
+      font-family: inherit;
+      font-weight: 600;
+      font-size: 0.95rem;
+      padding: 0.65rem 1.35rem;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      background: linear-gradient(180deg, var(--accent) 0%, var(--accent-dim) 100%);
+      color: #fff;
+      box-shadow: 0 2px 12px rgba(61, 156, 240, 0.25);
+    }
+    button:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+    button:not(:disabled):hover {
+      filter: brightness(1.06);
+    }
+    .hint {
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+    .badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 1.25rem;
+    }
+    .badge {
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 0.25rem 0.65rem;
+      border-radius: 999px;
+      background: #243044;
+      color: var(--muted);
+    }
+    .badge.ok { background: rgba(52, 199, 89, 0.15); color: var(--success); }
+    .badge.warn { background: rgba(245, 165, 36, 0.15); color: var(--warn); }
+    .badge.err { background: rgba(239, 91, 91, 0.15); color: var(--err); }
+    pre {
+      font-family: "JetBrains Mono", ui-monospace, monospace;
+      font-size: 0.78rem;
+      background: #121920;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+      overflow: auto;
+      max-height: 420px;
+      margin: 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .section-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      margin: 1.25rem 0 0.5rem;
+      color: var(--muted);
+    }
+    .slots {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .slots li {
+      padding: 0.6rem 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin-bottom: 0.5rem;
+      font-size: 0.9rem;
+      background: #121920;
+    }
+    .err-box {
+      margin-top: 1rem;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      background: rgba(239, 91, 91, 0.1);
+      border: 1px solid rgba(239, 91, 91, 0.35);
+      color: #ffb4b4;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>Clinic scheduling demo</h1>
+      <p>Intent agent (Ollama) plus Availability (schedule file). Start Ollama, then run uvicorn on a free port (e.g. <strong>8010</strong> if <code>8000</code> fails on Windows).</p>
+    </header>
+
+    <div class="card">
+      <label for="q">Patient or staff request</label>
+      <textarea id="q" placeholder="Example: I need a cardiology appointment on 2026-05-02 in the morning.">I need a cardiology appointment on 2026-05-02 in the morning.</textarea>
+      <div class="row">
+        <button type="button" id="go">Run Intent → Availability</button>
+        <span class="hint">Uses <code>/api/pipeline</code> — first run may take a while while the model loads.</span>
+      </div>
+      <div class="badges" id="badges" aria-live="polite"></div>
+      <div id="err" class="err-box" style="display:none;"></div>
+      <div class="section-title" id="slots-title" style="display:none;">Available slots</div>
+      <ul class="slots" id="slots"></ul>
+      <div class="section-title">Full JSON state</div>
+      <pre id="out">{}</pre>
+    </div>
+  </div>
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const go = $("go");
+    const q = $("q");
+    const out = $("out");
+    const err = $("err");
+    const badges = $("badges");
+    const slotsEl = $("slots");
+    const slotsTitle = $("slots-title");
+
+    function setBadges(data) {
+      badges.innerHTML = "";
+      const st = data.status || "";
+      const av = data.availability_status || "";
+      const b = (cls, text) => {
+        const s = document.createElement("span");
+        s.className = "badge " + cls;
+        s.textContent = text;
+        badges.appendChild(s);
+      };
+      b(st === "complete" ? "ok" : st === "incomplete" ? "warn" : st === "error" ? "err" : "", "Intent: " + (st || "—"));
+      if (av) b(av.includes("ok") ? "ok" : av.includes("empty") ? "warn" : av.includes("fail") ? "err" : "", "Availability: " + av);
+    }
+
+    function renderSlots(data) {
+      slotsEl.innerHTML = "";
+      const lines = data.available_slots;
+      if (Array.isArray(lines) && lines.length) {
+        slotsTitle.style.display = "block";
+        lines.forEach((line) => {
+          const li = document.createElement("li");
+          li.textContent = line;
+          slotsEl.appendChild(li);
+        });
+      } else {
+        slotsTitle.style.display = "none";
+      }
+    }
+
+    async function run() {
+      err.style.display = "none";
+      go.disabled = true;
+      out.textContent = "Running…";
+      badges.innerHTML = "";
+      slotsEl.innerHTML = "";
+      slotsTitle.style.display = "none";
+      try {
+        const res = await fetch("/api/pipeline", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ user_input: q.value }),
+        });
+        const text = await res.text();
+        let data;
+        try {
+          data = JSON.parse(text);
+        } catch {
+          throw new Error(text || "Invalid JSON from server");
+        }
+        if (!res.ok) {
+          throw new Error(data.detail || text || res.statusText);
+        }
+        out.textContent = JSON.stringify(data, null, 2);
+        setBadges(data);
+        renderSlots(data);
+      } catch (e) {
+        err.textContent = String(e.message || e);
+        err.style.display = "block";
+        out.textContent = "{}";
+      } finally {
+        go.disabled = false;
+      }
+    }
+
+    go.addEventListener("click", run);
+  </script>
+</body>
+</html>

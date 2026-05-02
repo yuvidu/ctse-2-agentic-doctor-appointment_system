@@ -5,25 +5,39 @@ import re
 from tests.logging_tool import log_event
 
 def extract_json(text: str) -> dict:
-    match = re.search(r'\{.*\}', text, re.DOTALL)
+    match = re.search(r"\{.*\}", text, re.DOTALL)
     if match:
         try:
             return json.loads(match.group())
-        except:
+        except json.JSONDecodeError:
             return {}
     return {}
 
+
+def _apply_explicit_iso_date_from_user(user_input: str, data: dict) -> dict:
+    """If the user typed exactly one YYYY-MM-DD, trust it over the SLM date (fixes off-by-one hallucinations)."""
+    found = re.findall(r"\b(\d{4}-\d{2}-\d{2})\b", user_input)
+    unique = list(dict.fromkeys(found))
+    if len(unique) != 1:
+        return data
+    explicit = unique[0]
+    out = dict(data)
+    if out.get("date") != explicit:
+        out["date"] = explicit
+    return out
+
+
 def llm_parse_input(user_input: str) -> dict:
     prompt = f"""
-    Extract the following fields from user input:
-    - specialization
-    - date
-    - time_preference
+    Extract these fields as JSON keys: specialization, date, time_preference.
 
-    u need to match specilization to closest one from the list of available specializations. reread if you are not found specilazation.
-    if you are not found date or time, retuurn tomorrow date and morning time.
+    Rules:
+    - Map specialization to the closest valid medical specialty name (title case is OK).
+    - For "date": if the user gives a calendar date as YYYY-MM-DD anywhere in the text, copy that string EXACTLY — never change the day or substitute "tomorrow".
+    - If there is truly no date in the message, use tomorrow's date as YYYY-MM-DD and time_preference "morning".
+    - time_preference: one of morning, afternoon, evening, or any short phrase the user used.
 
-    Return ONLY JSON.
+    Return ONLY a JSON object, no markdown fences, no comments.
 
     Input: "{user_input}" """
 
@@ -43,7 +57,8 @@ def llm_parse_input(user_input: str) -> dict:
         ]
     )
 
-    content = response['message']['content']
+    content = response["message"]["content"]
     log_event("parsing_tool", "llm_raw_output", content)
 
-    return extract_json(content)
+    parsed = extract_json(content)
+    return _apply_explicit_iso_date_from_user(user_input, parsed)

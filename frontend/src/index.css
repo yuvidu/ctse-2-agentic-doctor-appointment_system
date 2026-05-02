@@ -1,0 +1,78 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+    --primary: 262 83% 58%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 262 83% 58%;
+    --radius: 0.5rem;
+  }
+
+  /* Purple-tinted dark surfaces (matches smoke + static demo feel). */
+  .dark {
+    --background: 262 32% 8%;
+    --foreground: 270 20% 96%;
+    --card: 262 28% 12%;
+    --card-foreground: 270 15% 96%;
+    --popover: 262 30% 11%;
+    --popover-foreground: 270 15% 96%;
+    --primary: 263 72% 60%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 262 22% 18%;
+    --secondary-foreground: 270 15% 92%;
+    --muted: 262 18% 20%;
+    --muted-foreground: 265 12% 68%;
+    --accent: 262 25% 22%;
+    --accent-foreground: 270 15% 95%;
+    --destructive: 0 62.8% 42%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 265 18% 24%;
+    --input: 265 18% 22%;
+    --ring: 263 72% 55%;
+  }
+
+  dialog {
+    margin: auto;
+  }
+
+  dialog::backdrop {
+    background: rgb(0 0 0 / 0.55);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply min-h-screen bg-background text-foreground antialiased;
+  }
+}
+
+/* Match chat + pipeline: neutral zinc glass (avoid purple-tinted shadcn `card` on this page). */
+@layer components {
+  .mas-panel {
+    @apply rounded-xl border border-white/10 bg-zinc-950/50 p-3 shadow-inner backdrop-blur-sm;
+  }
+  .mas-panel-inner {
+    @apply rounded-lg border border-white/10 bg-black/25;
+  }
+}
