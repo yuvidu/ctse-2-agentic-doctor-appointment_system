@@ -45,6 +45,15 @@ class AvailabilityPayload(TypedDict, total=False):
     ollama_ranking: OllamaSlotRanking
 
 
+class NotificationPayload(TypedDict, total=False):
+    """Mock notification result attached by ``notification_agent``."""
+
+    status: str
+    channel: str | None
+    message: str
+    error: str | None
+
+
 class GlobalState(TypedDict, total=False):
     """Pipeline slice passed to ``availability_agent``."""
 
@@ -54,3 +63,4 @@ class GlobalState(TypedDict, total=False):
     errors: list[ErrorEntry]
     status: str
     availability: AvailabilityPayload
+    notification: NotificationPayload

@@ -7,6 +7,7 @@ from pathlib import Path
 from agents.availability_agent import availability_agent
 from agents.crew_ai.crewai_agents import CREWAI_VERBOSE_FLAG, intent_agent_ai
 from agents.intent_agent import intent_agent
+from agents.notification_agent import notification_agent
 from crewai import Crew, Task
 from integration.intent_to_availability_state import global_state_from_intent_repo
 
@@ -15,7 +16,7 @@ _SCHEDULES = _REPO_ROOT / "data" / "sample_schedules.json"
 
 
 def run_system(user_input: str) -> dict:
-    """Run Intent agent, then Availability when intent is complete."""
+    """Run Intent, then Availability, then Notification (preview) when intent is complete."""
     state: dict = {
         "user_input": user_input,
         "intent": {},
@@ -64,5 +65,7 @@ def run_system(user_input: str) -> dict:
     ]
     if slots:
         state["doctor"] = str(slots[0].get("doctor_id", ""))
+
+    state = notification_agent(state)
 
     return state

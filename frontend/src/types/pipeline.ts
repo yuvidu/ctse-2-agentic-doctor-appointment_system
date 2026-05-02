@@ -1,3 +1,22 @@
+/** Notification agent slice from `run_system` (mock send + copy). */
+export interface NotificationPayload {
+  status?: string;
+  channel?: string | null;
+  message?: string;
+  error?: string | null;
+}
+
+/** Provisional or confirmed appointment row echoed to the UI. */
+export interface AppointmentPreview {
+  appointment_id?: string;
+  user_name?: string;
+  user_contact?: string;
+  doctor?: string;
+  specialization?: string;
+  time_iso?: string;
+  channel?: string;
+}
+
 /** Subset of `POST /api/pipeline` response used by the UI. */
 export interface PipelineResponse {
   user_input?: string;
@@ -18,4 +37,6 @@ export interface PipelineResponse {
     total_count?: number;
     ollama_ranking?: { rationale?: string; model?: string };
   };
+  notification?: NotificationPayload;
+  appointment?: AppointmentPreview | Record<string, unknown>;
 }
