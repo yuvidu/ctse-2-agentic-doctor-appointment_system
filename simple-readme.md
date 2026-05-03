@@ -48,6 +48,12 @@ cd "C:\Users\ASUS TUF\Desktop\CTSE 2\New folder"
 .\.venv\Scripts\Activate.ps1
 $env:SPECIALIZATIONS_API_URL = "http://127.0.0.1:8010/specializations"
 python -m uvicorn backend.main:app --reload --host 127.0.0.1 --port 8010
+or
+
+
+Set-Location "c:\Users\ASUS TUF\Documents\GitHub\ctse-2-agentic-doctor-appointment_system"
+$env:SPECIALIZATIONS_API_URL = "http://127.0.0.1:8010/specializations"
+python -m uvicorn backend.main:app --host 127.0.0.1 --port 8010
 ```
 
 ### B) MAS debug (prints + JSON lines on stderr for tracing)

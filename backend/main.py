@@ -17,6 +17,7 @@ if str(_REPO) not in sys.path:
     sys.path.insert(0, str(_REPO))
 
 from pipeline import run_system  # noqa: E402
+from agents.crew_ai.crewai_agents import run_crewai_runtime  # noqa: E402
 
 app = FastAPI(title="Healthcare MAS", version="0.1.0")
 
@@ -95,6 +96,15 @@ def run_pipeline(body: PipelineRequest) -> dict:
     """Run Intent, Availability, Booking, then Notification (Ollama + local tools)."""
     try:
         return run_system(body.user_input.strip())
+    except Exception as exc:  # noqa: BLE001 — surface errors to UI
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.post("/api/pipeline/crewai")
+def run_pipeline_crewai(body: PipelineRequest) -> dict:
+    """Run a real CrewAI kickoff path for runtime logging checks."""
+    try:
+        return run_crewai_runtime(body.user_input.strip())
     except Exception as exc:  # noqa: BLE001 — surface errors to UI
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
