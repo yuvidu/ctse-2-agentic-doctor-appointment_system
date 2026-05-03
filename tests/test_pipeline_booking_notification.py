@@ -43,10 +43,10 @@ def test_run_system_skips_notification_agent_when_booking_not_confirmed(monkeypa
         )
         return out
 
-    monkeypatch.setattr(pl, "intent_agent", fake_intent)
-    monkeypatch.setattr(pl, "availability_agent", fake_avail)
-    monkeypatch.setattr(pl, "booking_agent", fake_booking)
-    monkeypatch.setattr(pl, "notification_agent", capture_notification)
+    monkeypatch.setattr("orchestration.mas_workflow.intent_agent", fake_intent)
+    monkeypatch.setattr("orchestration.mas_workflow.availability_agent", fake_avail)
+    monkeypatch.setattr("orchestration.mas_workflow.booking_agent", fake_booking)
+    monkeypatch.setattr("orchestration.mas_workflow.notification_agent", capture_notification)
 
     out = pl.run_system("book anything")
 

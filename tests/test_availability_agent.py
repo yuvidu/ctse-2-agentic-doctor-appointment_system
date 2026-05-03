@@ -4,8 +4,13 @@ from pathlib import Path
 
 import pytest
 
+from datetime import datetime
+from zoneinfo import ZoneInfo
+
 from agents.availability_agent import availability_agent
 from schemas.state import GlobalState
+
+from tests.schedule_date_helpers import preferred_date_on_or_after_today
 
 
 @pytest.fixture
@@ -14,10 +19,13 @@ def schedules_file() -> Path:
 
 
 def test_valid_cardiology_morning(schedules_file: Path) -> None:
+    date_iso = preferred_date_on_or_after_today(
+        schedules_file, specialty="cardiology", morning_only=True
+    )
     state: GlobalState = {
         "intent": {
             "specialty": "cardiology",
-            "preferred_date": "2026-05-02",
+            "preferred_date": date_iso,
             "preferred_time_window": "morning",
         }
     }
@@ -26,8 +34,12 @@ def test_valid_cardiology_morning(schedules_file: Path) -> None:
     assert out.get("availability") is not None
     slots = out["availability"]["available_slots"]
     assert len(slots) >= 1
-    assert all(s["doctor_id"] == "D001" for s in slots)
-    assert all("10:00" in s["start"] for s in slots)
+    assert all(str(s.get("specialty", "")).lower() == "cardiology" for s in slots)
+    assert {str(s["doctor_id"]) for s in slots}.issubset({"D001", "D009"})
+    tz = ZoneInfo("Asia/Colombo")
+    for s in slots:
+        start = datetime.fromisoformat(str(s["start"])).astimezone(tz)
+        assert 5 <= start.hour < 12
 
 
 def test_missing_preferred_date(schedules_file: Path) -> None:
@@ -38,10 +50,11 @@ def test_missing_preferred_date(schedules_file: Path) -> None:
 
 
 def test_invalid_doctor_id_rejected(schedules_file: Path) -> None:
+    date_iso = preferred_date_on_or_after_today(schedules_file, specialty="cardiology")
     state: GlobalState = {
         "intent": {
             "doctor_id": "D001;DROP--",
-            "preferred_date": "2026-05-02",
+            "preferred_date": date_iso,
         }
     }
     out = availability_agent(state, schedules_path=schedules_file)
@@ -62,11 +75,12 @@ def test_empty_slots_future_day(schedules_file: Path) -> None:
     assert out.get("availability", {}).get("total_count") == 0
 
 
-def test_corrupt_schedules_json(tmp_path: Path) -> None:
+def test_corrupt_schedules_json(tmp_path: Path, schedules_file: Path) -> None:
     bad = tmp_path / "bad.json"
     bad.write_text("{not json", encoding="utf-8")
+    date_iso = preferred_date_on_or_after_today(schedules_file, specialty="cardiology")
     state: GlobalState = {
-        "intent": {"specialty": "cardiology", "preferred_date": "2026-05-02"}
+        "intent": {"specialty": "cardiology", "preferred_date": date_iso}
     }
     out = availability_agent(state, schedules_path=bad)
     assert out["status"] == "availability_failed"
@@ -75,10 +89,11 @@ def test_corrupt_schedules_json(tmp_path: Path) -> None:
 def test_tool_direct_invalid_window(schedules_file: Path) -> None:
     from tools.availability_tools.schedule_availability import fetch_doctor_availability
 
+    date_iso = preferred_date_on_or_after_today(schedules_file, specialty="cardiology")
     with pytest.raises(ValueError):
         fetch_doctor_availability(
             schedules_path=schedules_file,
             specialty="cardiology",
-            preferred_date="2026-05-02",
+            preferred_date=date_iso,
             preferred_time_window="night",
         )

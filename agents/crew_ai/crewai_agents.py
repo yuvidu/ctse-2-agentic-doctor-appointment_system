@@ -1,3 +1,5 @@
+"""CrewAI agent stubs for reference (prompt personas). Runtime orchestration uses LangGraph — see ``orchestration/mas_workflow.py``."""
+
 import os
 
 from crewai import Agent, LLM

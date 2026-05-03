@@ -68,6 +68,38 @@ def test_booking_no_slots(mock_state: dict) -> None:
     assert updated_state["booking"]["status"] == "no_slots_available"
 
 
+def test_booking_skipped_when_availability_not_ready() -> None:
+    state = {
+        "user_input": "book",
+        "availability_status": "availability_failed",
+        "availability": {},
+        "errors": [],
+    }
+    out = booking_agent(state)
+    assert out["booking"]["status"] == "skipped"
+    assert out["booking"]["detail"] == "availability_failed"
+    assert out.get("appointment") == {}
+
+
+def test_booking_no_slots_when_availability_empty() -> None:
+    state = {
+        "user_input": "book",
+        "availability_status": "availability_empty",
+        "availability": {
+            "available_slots": [],
+            "filters_applied": {
+                "specialty": "cardiology",
+                "preferred_date": "2026-05-05",
+                "preferred_time_window": "morning",
+            },
+        },
+        "errors": [],
+    }
+    out = booking_agent(state)
+    assert out["booking"]["status"] == "no_slots_available"
+    assert out["booking"]["filters_applied"]["specialty"] == "cardiology"
+
+
 def test_booking_uses_availability_status_only_from_availability_agent() -> None:
     state = {
         "user_input": "Book cardiologist",

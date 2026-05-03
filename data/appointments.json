@@ -1,1 +1,12 @@
-[]
+[
+  {
+    "id": "APP-3A4FC",
+    "doctor_id": "D009",
+    "start_time": "2026-05-05T08:30:00+05:30",
+    "end_time": "2026-05-05T09:00:00+05:30",
+    "location": "Clinic A",
+    "specialty": "cardiology",
+    "user_intent": "I need a cardiology appointment next Tuesday morning, preferably with Dr. Smith.",
+    "status": "confirmed"
+  }
+]

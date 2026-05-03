@@ -1,24 +1,28 @@
-import sys
-import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+"""LLM-as-judge smoke test (Ollama mocked — no daemon required)."""
+
+from __future__ import annotations
+
+from unittest.mock import patch
 
 from agents.intent_agent import intent_agent
 from tests.llm_judge import judge_output
 
 
-def test_llm_judge_valid_case():
+def test_llm_judge_valid_case() -> None:
     state = {"user_input": "Book dentist tomorrow"}
 
-    result = intent_agent(state)
+    fake_parse = {
+        "message": {
+            "content": '{"specialization":"Dentistry","date":"2026-05-10","time_preference":"morning"}'
+        }
+    }
+    fake_judge = {"message": {"content": "valid"}}
 
-    evaluation = judge_output(result)
+    with patch("tools.intent_tools.llm_parsing_tool.ollama.chat", return_value=fake_parse), patch(
+        "tests.llm_judge.ollama.chat", return_value=fake_judge
+    ):
+        result = intent_agent(state)
+        evaluation = judge_output(result)
 
-    print("Agent Output:", result)
-    print("Judge Result:", evaluation)
-
-    # SLMs may answer with a sentence; require leading verdict token.
     evaluation_clean = evaluation.lower().strip()
     assert evaluation_clean.startswith("valid") or evaluation_clean.startswith("invalid")
-
-if __name__ == "__main__":
-    test_llm_judge_valid_case()
