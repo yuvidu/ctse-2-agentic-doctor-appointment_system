@@ -1,5 +1,3 @@
-from crewai import Agent
-
 from tools.intent_tools.llm_parsing_tool import llm_parse_input
 from tools.intent_tools.missing_tool import detect_missing_fields
 from tools.intent_tools.response_tool import build_response

@@ -12,10 +12,11 @@ _DEFAULT_APPOINTMENTS_DB = _REPO_ROOT / "data" / "appointments.json"
 
 
 def _availability_ready(state: dict[str, Any]) -> bool:
-    """True when Availability succeeded with usable output."""
-    if state.get("availability_status") == "availability_ok":
+    """True when Availability finished the lookup (ok or empty). Not ready on tool/missing-input failures."""
+    av = state.get("availability_status")
+    if av in ("availability_ok", "availability_empty"):
         return True
-    return state.get("status") == "availability_ok"
+    return state.get("status") in ("availability_ok", "availability_empty")
 
 
 def booking_agent(state: dict[str, Any]) -> dict[str, Any]:
@@ -27,13 +28,19 @@ def booking_agent(state: dict[str, Any]) -> dict[str, Any]:
     manager = BookingManager(db_path=str(_DEFAULT_APPOINTMENTS_DB))
 
     if not _availability_ready(state):
+        detail = str(state.get("availability_status") or "availability_not_ready")
+        state["booking"] = {"status": "skipped", "detail": detail}
+        state["appointment"] = {}
         return state
 
     availability = state.get("availability") or {}
     slots: list[dict[str, Any]] = list(availability.get("available_slots") or [])
 
     if not slots:
-        state["booking"] = {"status": "no_slots_available"}
+        state["booking"] = {
+            "status": "no_slots_available",
+            "filters_applied": (availability.get("filters_applied") or {}),
+        }
         return state
 
     collision_messages: list[str] = []

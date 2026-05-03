@@ -56,6 +56,40 @@
   dialog::backdrop {
     background: rgb(0 0 0 / 0.55);
   }
+
+  /* Dark scrollbars (matches .dark surfaces + mas-panel zinc glass). */
+  html.dark {
+    color-scheme: dark;
+  }
+
+  html.dark * {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(265 16% 32%) hsl(262 28% 9%);
+  }
+
+  html.dark *::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  html.dark *::-webkit-scrollbar-track {
+    background: hsl(262 28% 9%);
+    border-radius: 9999px;
+  }
+
+  html.dark *::-webkit-scrollbar-thumb {
+    background: hsl(265 16% 30%);
+    border-radius: 9999px;
+    border: 2px solid hsl(262 28% 9%);
+  }
+
+  html.dark *::-webkit-scrollbar-thumb:hover {
+    background: hsl(263 22% 42%);
+  }
+
+  html.dark *::-webkit-scrollbar-corner {
+    background: hsl(262 28% 9%);
+  }
 }
 
 @layer base {

@@ -252,7 +252,7 @@ Use dates that exist in `data/sample_schedules.json` for predictable availabilit
 
 | Area | Status |
 |------|--------|
-| Multi-agent orchestration | `pipeline.run_system`: Intent → Availability → **Booking** → **Notification** (Crew `kickoff` removed; intent uses Ollama + tools only). **follow-up**: LangGraph / single Crew if you want one orchestration style only. |
+| Multi-agent orchestration | **LangGraph** (`orchestration/mas_workflow.py`): Intent → Availability → **Booking** → **Notification** with conditional routing; `pipeline.run_system` invokes the compiled graph. CrewAI agent stubs in `agents/crew_ai/` are legacy/reference only (runtime orchestration is LangGraph). |
 | Tools | Intent tools + `fetch_doctor_availability` + **notification mock send** + **JSON storage** under `data/`. |
 | State | `state_schema.State` for orchestrator dict; `schemas.state.GlobalState` for Availability slice; `integration/intent_to_availability_state.py` bridges Intent field names. |
 | Observability | JSON logs on stderr from `utils/logging_utils.py` and Intent tools (gated by `MAS_DEBUG`). |
